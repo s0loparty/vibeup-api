@@ -1,0 +1,49 @@
+# Dependencies
+vendor/
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+storage/logs/*
+
+# Testing
+.phpunit.result.cache
+coverage/
+
+# Build
+public/build
+public/hot
+
+# Docker
+docker-compose.override.yml
+
+# Cache
+bootstrap/cache/*
+!bootstrap/cache/.gitignore
+
+# Uploads
+storage/app/private/*
+storage/app/public/*
+
+# Horizon
+horizon.lock

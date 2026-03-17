@@ -1,0 +1,183 @@
+services:
+    # Laravel Application (FrankenPHP)
+    app:
+        image: ghcr.io/${GITHUB_USERNAME}/vibe-api:${IMAGE_TAG:-latest}
+        container_name: vibe-api-app
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        environment:
+            APP_NAME: "Vibe API"
+            APP_ENV: production
+            APP_KEY: ${APP_KEY}
+            APP_DEBUG: false
+            APP_URL: https://vibe.playerinlife.ru
+            
+            DB_CONNECTION: pgsql
+            DB_HOST: pgsql
+            DB_PORT: 5432
+            DB_DATABASE: ${DB_DATABASE}
+            DB_USERNAME: ${DB_USERNAME}
+            DB_PASSWORD: ${DB_PASSWORD}
+            
+            CACHE_STORE: redis
+            REDIS_CLIENT: phpredis
+            REDIS_HOST: redis
+            REDIS_PASSWORD: ${REDIS_PASSWORD}
+            REDIS_PORT: 6379
+            
+            QUEUE_CONNECTION: database
+            SESSION_DRIVER: database
+            
+            FILESYSTEM_DISK: s3
+            AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
+            AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
+            AWS_DEFAULT_REGION: us-east-1
+            AWS_BUCKET: ${MINIO_BUCKET}
+            AWS_ENDPOINT: http://minio:9000
+            AWS_USE_PATH_STYLE_ENDPOINT: true
+            
+            MAIL_MAILER: smtp
+            MAIL_HOST: mailpit
+            MAIL_PORT: 1025
+            MAIL_FROM_ADDRESS: noreply@vibe.playerinlife.ru
+            MAIL_FROM_NAME: "${APP_NAME}"
+            
+            HORIZON_DOMAIN: vibe.playerinlife.ru
+            HORIZON_BALANCE: 60
+            HORIZON_BALANCE_MAX_SHIFT: 10
+            HORIZON_BALANCE_COOLDOWN: 3
+        volumes:
+            - app_storage:/var/www/html/storage
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+        depends_on:
+            pgsql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            minio:
+                condition: service_healthy
+        networks:
+            - vibe-network
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:2019/metrics"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
+
+    # PostgreSQL Database
+    pgsql:
+        image: postgres:18-alpine
+        container_name: vibe-api-pgsql
+        restart: unless-stopped
+        ports:
+            - "${FORWARD_DB_PORT:-5432}:5432"
+        environment:
+            POSTGRES_DB: ${DB_DATABASE}
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - pgsql_data:/var/lib/postgresql/data
+        networks:
+            - vibe-network
+        healthcheck:
+            test: ["CMD", "pg_isready", "-q", "-d", "${DB_DATABASE}", "-U", "${DB_USERNAME}"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+
+    # Redis Cache
+    redis:
+        image: redis:alpine
+        container_name: vibe-api-redis
+        restart: unless-stopped
+        ports:
+            - "${FORWARD_REDIS_PORT:-6379}:6379"
+        command: redis-server --requirepass ${REDIS_PASSWORD}
+        volumes:
+            - redis_data:/data
+        networks:
+            - vibe-network
+        healthcheck:
+            test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+
+    # MinIO (S3-compatible storage)
+    minio:
+        image: minio/minio:latest
+        container_name: vibe-api-minio
+        restart: unless-stopped
+        ports:
+            - "${FORWARD_MINIO_PORT:-9000}:9000"
+            - "${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900"
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+            MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+        volumes:
+            - minio_data:/data
+        command: minio server /data --console-address ":8900"
+        networks:
+            - vibe-network
+        healthcheck:
+            test: ["CMD", "mc", "ready", "local"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+
+    # MinIO Bucket Creator (init container)
+    minio_init:
+        image: minio/mc:latest
+        container_name: vibe-api-minio-init
+        depends_on:
+            minio:
+                condition: service_healthy
+        environment:
+            MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+            MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+            MINIO_BUCKET: ${MINIO_BUCKET}
+        entrypoint: >
+            /bin/sh -c "
+            mc alias set myminio http://minio:9000 $$MINIO_ACCESS_KEY $$MINIO_SECRET_KEY;
+            mc mb --ignore-existing myminio/$$MINIO_BUCKET;
+            mc anonymous set public myminio/$$MINIO_BUCKET;
+            exit 0;
+            "
+        networks:
+            - vibe-network
+
+    # Mailpit (Email testing)
+    mailpit:
+        image: axllent/mailpit:latest
+        container_name: vibe-api-mailpit
+        restart: unless-stopped
+        ports:
+            - "${FORWARD_MAILPIT_PORT:-1025}:1025"
+            - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
+        networks:
+            - vibe-network
+
+networks:
+    vibe-network:
+        driver: bridge
+        name: vibe-network
+
+volumes:
+    pgsql_data:
+        driver: local
+        name: vibe-pgsql-data
+    redis_data:
+        driver: local
+        name: vibe-redis-data
+    minio_data:
+        driver: local
+        name: vibe-minio-data
+    app_storage:
+        driver: local
+        name: vibe-app-storage

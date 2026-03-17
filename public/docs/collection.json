@@ -1,0 +1,702 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "http:\/\/localhost"
+        }
+    ],
+    "info": {
+        "name": "VibeUp API Documentation",
+        "_postman_id": "1ceb73f9-5ee5-4698-b9e0-8cebc9b9a58a",
+        "description": "",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+    },
+    "item": [
+        {
+            "name": "\u0410\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u044f",
+            "description": "",
+            "item": [
+                {
+                    "name": "\u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044f",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/register",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/register"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"user@example.com\",\"password\":\"secret123\"}"
+                        },
+                        "description": "\u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u0443\u0435\u0442 \u043d\u043e\u0432\u043e\u0433\u043e \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f \u0438 \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u0442\u043e\u043a\u0435\u043d \u0434\u043e\u0441\u0442\u0443\u043f\u0430."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"user\":{\"id\":1,\"name\":\"John Doe\",\"email\":\"user@example.com\",\"email_verified_at\":null,\"created_at\":\"2026-03-11T11:36:31.000000Z\",\"updated_at\":\"2026-03-11T11:36:31.000000Z\"},\"token\":{\"token\":\"1|abc123xyz456\",\"type\":\"Bearer\"}}",
+                            "name": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d"
+                        },
+                        {
+                            "header": [],
+                            "code": 409,
+                            "body": "{\"message\":\"\\u041f\\u043e\\u043b\\u044c\\u0437\\u043e\\u0432\\u0430\\u0442\\u0435\\u043b\\u044c \\u0441 \\u0442\\u0430\\u043a\\u0438\\u043c email \\u0443\\u0436\\u0435 \\u0437\\u0430\\u0440\\u0435\\u0433\\u0438\\u0441\\u0442\\u0440\\u0438\\u0440\\u043e\\u0432\\u0430\\u043d\"}",
+                            "name": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u0441 \u0442\u0430\u043a\u0438\u043c email \u0443\u0436\u0435 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u0435\u0442"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"The email field is required. (and 1 more error)\",\"errors\":{\"email\":[\"The email field is required.\"],\"password\":[\"The password field is required.\"]}}",
+                            "name": "\u041e\u0448\u0438\u0431\u043a\u0430 \u0432\u0430\u043b\u0438\u0434\u0430\u0446\u0438\u0438"
+                        }
+                    ]
+                },
+                {
+                    "name": "\u0412\u0445\u043e\u0434",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/login",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/login"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"user@example.com\",\"password\":\"password\"}"
+                        },
+                        "description": "\u0410\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f \u0438 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0438\u0435 \u0442\u043e\u043a\u0435\u043d\u0430 \u0434\u043e\u0441\u0442\u0443\u043f\u0430."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"user\":{\"id\":1,\"name\":\"John Doe\",\"email\":\"user@example.com\",\"email_verified_at\":\"2026-03-11T11:36:31.000000Z\",\"created_at\":\"2026-03-11T11:36:31.000000Z\",\"updated_at\":\"2026-03-11T11:36:31.000000Z\"},\"token\":{\"token\":\"1|abc123xyz456\",\"type\":\"Bearer\"}}",
+                            "name": "\u0423\u0441\u043f\u0435\u0448\u043d\u044b\u0439 \u0432\u0445\u043e\u0434"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"\\u041d\\u0435\\u0432\\u0435\\u0440\\u043d\\u044b\\u0439 email \\u0438\\u043b\\u0438 \\u043f\\u0430\\u0440\\u043e\\u043b\\u044c\"}",
+                            "name": "\u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0435 \u0443\u0447\u0451\u0442\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"The email field is required. (and 1 more error)\",\"errors\":{\"email\":[\"The email field is required.\"],\"password\":[\"The password field is required.\"]}}",
+                            "name": "\u041e\u0448\u0438\u0431\u043a\u0430 \u0432\u0430\u043b\u0438\u0434\u0430\u0446\u0438\u0438"
+                        }
+                    ]
+                },
+                {
+                    "name": "\u0412\u044b\u0445\u043e\u0434",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/logout",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/logout"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "\u0423\u043d\u0438\u0447\u0442\u043e\u0436\u0430\u0435\u0442 \u0442\u0435\u043a\u0443\u0449\u0438\u0439 \u0442\u043e\u043a\u0435\u043d \u0434\u043e\u0441\u0442\u0443\u043f\u0430 (\u0432\u044b\u0445\u043e\u0434 \u0438\u0437 \u0441\u0438\u0441\u0442\u0435\u043c\u044b)."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"\\u0423\\u0441\\u043f\\u0435\\u0448\\u043d\\u044b\\u0439 \\u0432\\u044b\\u0445\\u043e\\u0434\"}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u043d\u0435 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u0446\u0438\u0440\u043e\u0432\u0430\u043d"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f",
+            "description": "",
+            "item": [
+                {
+                    "name": "\u0421\u043f\u0438\u0441\u043e\u043a \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0439 \u0447\u0430\u0442\u0430",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/chats\/:chat_id\/messages",
+                            "query": [
+                                {
+                                    "key": "filter%5Btype%5D",
+                                    "value": "architecto",
+                                    "description": "\u0424\u0438\u043b\u044c\u0442\u0440 \u043f\u043e \u0442\u0438\u043f\u0443 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f (text, image, video, etc.)",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "filter%5Bsender_id%5D",
+                                    "value": "1",
+                                    "description": "\u0424\u0438\u043b\u044c\u0442\u0440 \u043f\u043e ID \u043e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u0435\u043b\u044f",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "filter%5Bbefore%5D",
+                                    "value": "123",
+                                    "description": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f \u0434\u043e \u0443\u043a\u0430\u0437\u0430\u043d\u043d\u043e\u0433\u043e ID (\u0434\u043b\u044f \u043f\u0430\u0433\u0438\u043d\u0430\u0446\u0438\u0438)",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "filter%5Bafter%5D",
+                                    "value": "100",
+                                    "description": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f \u043f\u043e\u0441\u043b\u0435 \u0443\u043a\u0430\u0437\u0430\u043d\u043d\u043e\u0433\u043e ID (\u0434\u043b\u044f \u043f\u0430\u0433\u0438\u043d\u0430\u0446\u0438\u0438)",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "include",
+                                    "value": "sender%2CreplyTo",
+                                    "description": "\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0441\u0432\u044f\u0437\u0430\u043d\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 (sender, replyTo, chat)",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "-id",
+                                    "description": "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430: id, created_at, updated_at (\u043f\u0440\u0435\u0444\u0438\u043a\u0441 - \u0434\u043b\u044f \u0443\u0431\u044b\u0432\u0430\u043d\u0438\u044f)",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "fields%5Bmessages%5D",
+                                    "value": "id%2Cbody%2Ctype%2Ccreated_at",
+                                    "description": "\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u043a\u043e\u043d\u043a\u0440\u0435\u0442\u043d\u044b\u0435 \u043f\u043e\u043b\u044f",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/chats\/:chat_id\/messages?filter%5Btype%5D=architecto&filter%5Bsender_id%5D=1&filter%5Bbefore%5D=123&filter%5Bafter%5D=100&include=sender%2CreplyTo&sort=-id&fields%5Bmessages%5D=id%2Cbody%2Ctype%2Ccreated_at",
+                            "variable": [
+                                {
+                                    "id": "chat_id",
+                                    "key": "chat_id",
+                                    "value": "1",
+                                    "description": "The ID of the chat."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n\t\"data\": [\n\t\t{\n\t\t\t\"id\": 53,\n\t\t\t\"chat_id\": 2,\n\t\t\t\"sender_id\": 1,\n\t\t\t\"type\": \"text\",\n\t\t\t\"body\": \"\u041f\u0440\u0438\u0432\u0435\u0442, \u043a\u0430\u043a \u0434\u0435\u043b\u0430?\",\n\t\t\t\"reply_to_id\": null,\n\t\t\t\"edited_at\": null,\n\t\t\t\"created_at\": \"2026-03-11T11:36:31.000000Z\",\n\t\t\t\"updated_at\": \"2026-03-11T11:36:31.000000Z\",\n\t\t\t\"sender\": {\n\t\t\t\t\"id\": 1,\n\t\t\t\t\"name\": \"John\",\n\t\t\t\t\"email\": \"john@example.com\"\n\t\t\t}\n\t\t}\n\t],\n\t\"path\": \"http:\/\/localhost\/api\/v1\/chats\/2\/messages\",\n\t\"per_page\": 30,\n\t\"next_cursor\": \"eyJpZCI6NTN9\",\n\t\"next_page_url\": \"http:\/\/localhost\/api\/v1\/chats\/2\/messages?cursor=eyJpZCI6NTN9\",\n\t\"prev_cursor\": null,\n\t\"prev_page_url\": null\n}",
+                            "name": "\u0421\u043f\u0438\u0441\u043e\u043a \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0439 \u0441 \u043a\u0443\u0440\u0441\u043e\u0440\u043d\u043e\u0439 \u043f\u0430\u0433\u0438\u043d\u0430\u0446\u0438\u0435\u0439"
+                        }
+                    ]
+                },
+                {
+                    "name": "\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/chats\/:chat_id\/messages",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/chats\/:chat_id\/messages",
+                            "variable": [
+                                {
+                                    "id": "chat_id",
+                                    "key": "chat_id",
+                                    "value": "1",
+                                    "description": "The ID of the chat."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"type\":\"text\",\"body\":\"\u041f\u0440\u0438\u0432\u0435\u0442, \u043a\u0430\u043a \u0434\u0435\u043b\u0430?\",\"reply_to_id\":123}"
+                        },
+                        "description": "\u041e\u0442\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u0442 \u043d\u043e\u0432\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0432 \u0447\u0430\u0442."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n\t\"id\": 456,\n\t\"chat_id\": 1,\n\t\"sender_id\": 2,\n\t\"type\": \"text\",\n\t\"body\": \"\u041f\u0440\u0438\u0432\u0435\u0442, \u043a\u0430\u043a \u0434\u0435\u043b\u0430?\",\n\t\"reply_to_id\": null,\n\t\"edited_at\": null,\n\t\"created_at\": \"2026-03-11T11:36:31.000000Z\",\n\t\"updated_at\": \"2026-03-11T11:36:31.000000Z\",\n\t\"sender\": {\n\t\t\"id\": 2,\n\t\t\"name\": \"John\",\n\t\t\"email\": \"john@example.com\",\n\t\t\"created_at\": \"2026-02-28T10:30:00.000000Z\",\n\t\t\"updated_at\": \"2026-02-28T10:30:00.000000Z\"\n\t}\n}",
+                            "name": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0441\u043e\u0437\u0434\u0430\u043d\u043e"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\":\"Not a member of this chat\"}",
+                            "name": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u043d\u0435 \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u043e\u043c \u0447\u0430\u0442\u0430"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\":\"The body field is required.\",\"errors\":{\"body\":[\"The body field is required.\"]}}",
+                            "name": "\u041e\u0448\u0438\u0431\u043a\u0430 \u0432\u0430\u043b\u0438\u0434\u0430\u0446\u0438\u0438"
+                        }
+                    ]
+                },
+                {
+                    "name": "\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/messages\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/messages\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the message."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "\u0412\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043e\u0434\u043d\u043e \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u043f\u043e ID."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n\t\"id\": 456,\n\t\"chat_id\": 1,\n\t\"sender_id\": 2,\n\t\"type\": \"text\",\n\t\"body\": \"\u041f\u0440\u0438\u0432\u0435\u0442, \u043a\u0430\u043a \u0434\u0435\u043b\u0430?\",\n\t\"reply_to_id\": null,\n\t\"edited_at\": null,\n\t\"created_at\": \"2026-03-11T11:36:31.000000Z\",\n\t\"updated_at\": \"2026-03-11T11:36:31.000000Z\",\n\t\"sender\": {\n\t\t\"id\": 2,\n\t\t\"name\": \"John\",\n\t\t\"email\": \"john@example.com\"\n\t},\n\t\"reply_to\": null\n}",
+                            "name": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": null,
+                            "name": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u043d\u0435 \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u043e\u043c \u0447\u0430\u0442\u0430"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": null,
+                            "name": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e"
+                        }
+                    ]
+                },
+                {
+                    "name": "\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/messages\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/messages\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the message."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"body\":\"\u041e\u0431\u043d\u043e\u0432\u043b\u0451\u043d\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442\"}"
+                        },
+                        "description": "\u041e\u0431\u043d\u043e\u0432\u043b\u044f\u0435\u0442 \u0442\u0435\u043a\u0441\u0442 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f. \u0422\u043e\u043b\u044c\u043a\u043e \u0430\u0432\u0442\u043e\u0440 \u043c\u043e\u0436\u0435\u0442 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n\t\"id\": 456,\n\t\"chat_id\": 1,\n\t\"sender_id\": 2,\n\t\"type\": \"text\",\n\t\"body\": \"\u041e\u0431\u043d\u043e\u0432\u043b\u0451\u043d\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442\",\n\t\"reply_to_id\": null,\n\t\"edited_at\": \"2026-03-11T12:00:00.000000Z\",\n\t\"created_at\": \"2026-03-11T11:36:31.000000Z\",\n\t\"updated_at\": \"2026-03-11T12:00:00.000000Z\",\n\t\"sender\": {\n\t\t\"id\": 2,\n\t\t\"name\": \"John\",\n\t\t\"email\": \"john@example.com\"\n\t}\n}",
+                            "name": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u043e"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": null,
+                            "name": "\u0422\u043e\u043b\u044c\u043a\u043e \u0430\u0432\u0442\u043e\u0440 \u043c\u043e\u0436\u0435\u0442 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c"
+                        }
+                    ]
+                },
+                {
+                    "name": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/messages\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/messages\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the message."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "\u0423\u0434\u0430\u043b\u044f\u0435\u0442 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435. \u0422\u043e\u043b\u044c\u043a\u043e \u0430\u0432\u0442\u043e\u0440 \u0438\u043b\u0438 \u043c\u043e\u0434\u0435\u0440\u0430\u0442\u043e\u0440\/\u0432\u043b\u0430\u0434\u0435\u043b\u0435\u0446."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"status\":\"success\",\"message\":\"The message was successfully deleted.\"}",
+                            "name": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0443\u0434\u0430\u043b\u0435\u043d\u043e"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": null,
+                            "name": "\u041d\u0435\u0442 \u043f\u0440\u0430\u0432 \u043d\u0430 \u0443\u0434\u0430\u043b\u0435\u043d\u0438\u0435"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "\u0422\u0435\u043a\u0443\u0449\u0438\u0439 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c",
+            "description": "",
+            "item": [
+                {
+                    "name": "\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/user",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/user"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "\u0412\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0435 \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u0446\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0433\u043e \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"id\":1,\"name\":\"test\",\"email\":\"test@example.com\",\"email_verified_at\":\"2026-02-28T20:21:48.000000Z\",\"last_seen_at\":null,\"created_at\":\"2026-02-28T20:21:48.000000Z\",\"updated_at\":\"2026-02-28T20:21:48.000000Z\"}",
+                            "name": "\u0414\u0430\u043d\u043d\u044b\u0435 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u044b"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": null,
+                            "name": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u043d\u0435 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u0446\u0438\u0440\u043e\u0432\u0430\u043d"
+                        }
+                    ]
+                },
+                {
+                    "name": "\u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/user",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/user"
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"John Doe\",\"email\":\"john@example.com\",\"password\":\"password\"}"
+                        },
+                        "description": "\u041e\u0431\u043d\u043e\u0432\u043b\u044f\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0435 \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u0446\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0433\u043e \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"id\":1,\"name\":\"John Doe\",\"email\":\"john@example.com\",\"email_verified_at\":\"2026-02-28T20:21:48.000000Z\",\"created_at\":\"2026-02-28T20:21:48.000000Z\",\"updated_at\":\"2026-02-28T20:25:00.000000Z\"}",
+                            "name": "\u0414\u0430\u043d\u043d\u044b\u0435 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u044b"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": null,
+                            "name": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u043d\u0435 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u0446\u0438\u0440\u043e\u0432\u0430\u043d"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": null,
+                            "name": "\u041e\u0448\u0438\u0431\u043a\u0430 \u0432\u0430\u043b\u0438\u0434\u0430\u0446\u0438\u0438"
+                        }
+                    ]
+                },
+                {
+                    "name": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/user",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/user"
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "\u0411\u0435\u0437\u0432\u043e\u0437\u0432\u0440\u0430\u0442\u043d\u043e \u0443\u0434\u0430\u043b\u044f\u0435\u0442 \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\":\"\\u0410\\u043a\\u043a\\u0430\\u0443\\u043d\\u0442 \\u0443\\u0441\\u043f\\u0435\\u0448\\u043d\\u043e \\u0443\\u0434\\u0430\\u043b\\u0451\\u043d\"}",
+                            "name": "\u0410\u043a\u043a\u0430\u0443\u043d\u0442 \u0443\u0434\u0430\u043b\u0451\u043d"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": null,
+                            "name": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u043d\u0435 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u0446\u0438\u0440\u043e\u0432\u0430\u043d"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "\u0427\u0430\u0442\u044b",
+            "description": "",
+            "item": [
+                {
+                    "name": "\u0421\u043f\u0438\u0441\u043e\u043a \u0447\u0430\u0442\u043e\u0432 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/chats",
+                            "query": [
+                                {
+                                    "key": "filter%5Btype%5D",
+                                    "value": "private",
+                                    "description": "\u0424\u0438\u043b\u044c\u0442\u0440 \u043f\u043e \u0442\u0438\u043f\u0443 \u0447\u0430\u0442\u0430 (private, group)",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "include",
+                                    "value": "lastMessage",
+                                    "description": "\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0441\u0432\u044f\u0437\u0430\u043d\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 (members, lastMessage, creator)",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "-updated_at",
+                                    "description": "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430: id, created_at, updated_at (\u043f\u0440\u0435\u0444\u0438\u043a\u0441 - \u0434\u043b\u044f \u0443\u0431\u044b\u0432\u0430\u043d\u0438\u044f)",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/chats?filter%5Btype%5D=private&include=lastMessage&sort=-updated_at"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n    \"data\": [\n        {\n            \"id\": 1,\n            \"type\": \"group\",\n            \"title\": \"Laravel Developers\",\n            \"created_by\": 1,\n            \"created_at\": \"2026-02-28T20:21:48.000000Z\",\n            \"updated_at\": \"2026-02-28T20:21:48.000000Z\",\n            \"last_message_id\": 1,\n            \"pivot\": {\n                \"user_id\": 1,\n                \"chat_id\": 1,\n                \"role\": \"owner\",\n                \"last_read_message_id\": null,\n                \"created_at\": \"2026-02-28T20:21:48.000000Z\",\n                \"updated_at\": \"2026-02-28T20:21:48.000000Z\"\n            }\n        }\n    ],\n    \"meta\": {\n        \"current_page\": 1,\n        \"per_page\": 15,\n        \"path\": \"http:\/\/localhost\/api\/v1\/chats\",\n        \"next_cursor\": \"eyJpZCI6MTB9\",\n        \"prev_cursor\": null\n    }\n}",
+                            "name": "\u0421\u043f\u0438\u0441\u043e\u043a \u0447\u0430\u0442\u043e\u0432 \u0441 \u043a\u0443\u0440\u0441\u043e\u0440\u043d\u043e\u0439 \u043f\u0430\u0433\u0438\u043d\u0430\u0446\u0438\u0435\u0439"
+                        }
+                    ]
+                },
+                {
+                    "name": "\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044e \u043e \u0447\u0430\u0442\u0435",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/chats\/:id",
+                            "query": [
+                                {
+                                    "key": "include",
+                                    "value": "members%2ClastMessage",
+                                    "description": "\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0441\u0432\u044f\u0437\u0430\u043d\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 (members, lastMessage, creator)",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/chats\/:id?include=members%2ClastMessage",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the chat."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "\u0412\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0435 \u0447\u0430\u0442\u0430 \u043f\u043e ID."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"id\":1,\"type\":\"private\",\"title\":null,\"created_by\":2,\"last_message_id\":123,\"created_at\":\"2026-02-28T10:30:00.000000Z\",\"updated_at\":\"2026-02-28T10:30:00.000000Z\"}",
+                            "name": "\u0414\u0430\u043d\u043d\u044b\u0435 \u0447\u0430\u0442\u0430"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": null,
+                            "name": "\u041d\u0435\u0442 \u0434\u043e\u0441\u0442\u0443\u043f\u0430 \u043a \u0447\u0430\u0442\u0443"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": null,
+                            "name": "\u0427\u0430\u0442 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "key",
+                "type": "string"
+            }
+        ]
+    }
+}

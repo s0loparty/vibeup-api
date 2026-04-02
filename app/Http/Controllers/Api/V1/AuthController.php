@@ -17,6 +17,7 @@ class AuthController extends Controller
 {
     #[OA\Post(
         path: '/api/v1/auth/register',
+        operationId: 'auth.register',
         summary: 'Регистрация нового пользователя',
         description: 'Создаёт нового пользователя и возвращает токен доступа',
         tags: ['Авторизация'],
@@ -70,6 +71,7 @@ class AuthController extends Controller
 
     #[OA\Post(
         path: '/api/v1/auth/login',
+        operationId: 'auth.login',
         summary: 'Вход',
         description: 'Аутентификация пользователя и получение токена доступа',
         tags: ['Авторизация'],
@@ -127,6 +129,7 @@ class AuthController extends Controller
 
     #[OA\Post(
         path: '/api/v1/auth/logout',
+        operationId: 'auth.logout',
         summary: 'Выход',
         description: 'Уничтожает текущий токен доступа (выход из системы)',
         tags: ['Авторизация'],

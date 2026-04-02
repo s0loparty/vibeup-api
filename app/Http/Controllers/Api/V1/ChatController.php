@@ -21,6 +21,7 @@ class ChatController extends Controller
 
     #[OA\Get(
         path: '/api/v1/chats',
+        operationId: 'chats.index',
         summary: 'Список чатов пользователя',
         description: 'Возвращает список чатов пользователя с курсорной пагинацией',
         tags: ['Чаты'],
@@ -85,6 +86,7 @@ class ChatController extends Controller
 
     #[OA\Post(
         path: '/api/v1/chats',
+        operationId: 'chats.store',
         summary: 'Создать чат',
         description: 'Создаёт новый чат. Для private чата нужно передать participant_id',
         tags: ['Чаты'],
@@ -152,6 +154,7 @@ class ChatController extends Controller
 
     #[OA\Get(
         path: '/api/v1/chats/{chat}',
+        operationId: 'chats.show',
         summary: 'Получить информацию о чате',
         description: 'Возвращает данные чата по ID',
         tags: ['Чаты'],
@@ -218,6 +221,7 @@ class ChatController extends Controller
 
     #[OA\Put(
         path: '/api/v1/chats/{chat}',
+        operationId: 'chats.update',
         summary: 'Обновить чат',
         description: 'Обновляет название чата. Только для group чатов',
         tags: ['Чаты'],
@@ -286,6 +290,7 @@ class ChatController extends Controller
 
     #[OA\Delete(
         path: '/api/v1/chats/{chat}',
+        operationId: 'chats.destroy',
         summary: 'Удалить чат',
         description: 'Удаляет чат. Только владелец может удалить',
         tags: ['Чаты'],

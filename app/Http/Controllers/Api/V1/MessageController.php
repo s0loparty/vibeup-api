@@ -17,6 +17,7 @@ class MessageController extends Controller
 {
     #[OA\Get(
         path: '/api/v1/chats/{chatId}/messages',
+        operationId: 'messages.index',
         summary: 'Список сообщений чата',
         description: 'Возвращает список сообщений чата с курсорной пагинацией',
         tags: ['Сообщения'],
@@ -136,6 +137,7 @@ class MessageController extends Controller
 
     #[OA\Post(
         path: '/api/v1/chats/{chatId}/messages',
+        operationId: 'messages.store',
         summary: 'Создать сообщение',
         description: 'Отправляет новое сообщение в чат',
         tags: ['Сообщения'],
@@ -203,6 +205,7 @@ class MessageController extends Controller
 
     #[OA\Get(
         path: '/api/v1/chats/{chatId}/messages/{message}',
+        operationId: 'messages.show',
         summary: 'Показать сообщение',
         description: 'Возвращает одно сообщение по ID',
         tags: ['Сообщения'],
@@ -261,6 +264,7 @@ class MessageController extends Controller
 
     #[OA\Put(
         path: '/api/v1/chats/{chatId}/messages/{message}',
+        operationId: 'messages.update',
         summary: 'Редактировать сообщение',
         description: 'Обновляет текст сообщения. Только автор может редактировать',
         tags: ['Сообщения'],
@@ -321,6 +325,7 @@ class MessageController extends Controller
 
     #[OA\Delete(
         path: '/api/v1/chats/{chatId}/messages/{message}',
+        operationId: 'messages.destroy',
         summary: 'Удалить сообщение',
         description: 'Удаляет сообщение. Только автор или модератор/владелец',
         tags: ['Сообщения'],

@@ -13,6 +13,7 @@ class CurrentUserController extends Controller
 {
     #[OA\Get(
         path: '/api/v1/user',
+        operationId: 'user.show',
         summary: 'Получить текущего пользователя',
         description: 'Возвращает данные текущего аутентифицированного пользователя',
         tags: ['Текущий пользователь'],
@@ -41,6 +42,7 @@ class CurrentUserController extends Controller
 
     #[OA\Put(
         path: '/api/v1/user',
+        operationId: 'user.update',
         summary: 'Обновить текущего пользователя',
         description: 'Обновляет данные текущего аутентифицированного пользователя',
         tags: ['Текущий пользователь'],
@@ -93,6 +95,7 @@ class CurrentUserController extends Controller
 
     #[OA\Delete(
         path: '/api/v1/user',
+        operationId: 'user.destroy',
         summary: 'Удалить текущего пользователя',
         description: 'Безвозвратно удаляет аккаунт текущего пользователя',
         tags: ['Текущий пользователь'],

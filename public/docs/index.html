@@ -72,7 +72,7 @@
                 </li>
                                     <ul id="tocify-subheader-avtorizaciia" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="avtorizaciia-POSTapi-v1-auth-register">
-                                <a href="#avtorizaciia-POSTapi-v1-auth-register">Регистрация</a>
+                                <a href="#avtorizaciia-POSTapi-v1-auth-register">Регистрация нового пользователя</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="avtorizaciia-POSTapi-v1-auth-login">
                                 <a href="#avtorizaciia-POSTapi-v1-auth-login">Вход</a>
@@ -142,7 +142,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: March 14, 2026</li>
+        <li>Last updated: April 1, 2026</li>
     </ul>
 </div>
 
@@ -167,13 +167,13 @@ You can switch the language used with the tabs at the top right (or from the nav
 
     
 
-                                <h2 id="avtorizaciia-POSTapi-v1-auth-register">Регистрация</h2>
+                                <h2 id="avtorizaciia-POSTapi-v1-auth-register">Регистрация нового пользователя</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
 </p>
 
-<p>Регистрирует нового пользователя и возвращает токен доступа.</p>
+
 
 <span id="example-requests-POSTapi-v1-auth-register">
 <blockquote>Example request:</blockquote>
@@ -218,7 +218,7 @@ fetch(url, {
 
 <span id="example-responses-POSTapi-v1-auth-register">
             <blockquote>
-            <p>Example response (201, Пользователь зарегистрирован):</p>
+            <p>Example response (201, Успешная регистрация):</p>
         </blockquote>
                 <pre>
 
@@ -238,7 +238,7 @@ fetch(url, {
 }</code>
  </pre>
             <blockquote>
-            <p>Example response (409, Пользователь с таким email уже существует):</p>
+            <p>Example response (409, Пользователь уже существует):</p>
         </blockquote>
                 <pre>
 
@@ -742,7 +742,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/chats/1/messages?filter%5Btype%5D=architecto&amp;filter%5Bsender_id%5D=1&amp;filter%5Bbefore%5D=123&amp;filter%5Bafter%5D=100&amp;include=sender%2CreplyTo&amp;sort=-id&amp;fields%5Bmessages%5D=id%2Cbody%2Ctype%2Ccreated_at" \
+    --get "http://localhost/api/v1/chats/2/messages?filter%5Btype%5D=architecto&amp;filter%5Bsender_id%5D=1&amp;filter%5Bbefore%5D=123&amp;filter%5Bafter%5D=100&amp;include=sender%2CreplyTo&amp;sort=-id&amp;fields%5Bmessages%5D=id%2Cbody%2Ctype%2Ccreated_at" \
     --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -750,7 +750,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/chats/1/messages"
+    "http://localhost/api/v1/chats/2/messages"
 );
 
 const params = {
@@ -903,10 +903,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="chat_id"                data-endpoint="GETapi-v1-chats--chat_id--messages"
-               value="1"
+               value="2"
                data-component="url">
     <br>
-<p>The ID of the chat. Example: <code>1</code></p>
+<p>The ID of the chat. Example: <code>2</code></p>
             </div>
                         <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
                                     <div style="padding-left: 28px; clear: unset;">
@@ -1009,7 +1009,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/v1/chats/1/messages" \
+    "http://localhost/api/v1/chats/2/messages" \
     --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -1023,7 +1023,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/chats/1/messages"
+    "http://localhost/api/v1/chats/2/messages"
 );
 
 const headers = {
@@ -1186,10 +1186,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="chat_id"                data-endpoint="POSTapi-v1-chats--chat_id--messages"
-               value="1"
+               value="2"
                data-component="url">
     <br>
-<p>The ID of the chat. Example: <code>1</code></p>
+<p>The ID of the chat. Example: <code>2</code></p>
             </div>
                             <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
         <div style=" padding-left: 28px;  clear: unset;">
@@ -2472,7 +2472,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/chats/1?include=members%2ClastMessage" \
+    --get "http://localhost/api/v1/chats/2?include=members%2ClastMessage" \
     --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2480,7 +2480,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/chats/1"
+    "http://localhost/api/v1/chats/2"
 );
 
 const params = {
@@ -2624,10 +2624,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="id"                data-endpoint="GETapi-v1-chats--id-"
-               value="1"
+               value="2"
                data-component="url">
     <br>
-<p>The ID of the chat. Example: <code>1</code></p>
+<p>The ID of the chat. Example: <code>2</code></p>
             </div>
                         <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
                                     <div style="padding-left: 28px; clear: unset;">

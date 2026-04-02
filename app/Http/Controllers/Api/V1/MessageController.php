@@ -10,260 +10,376 @@ use App\Models\Message;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\CursorPaginator;
+use OpenApi\Attributes as OA;
 use Spatie\QueryBuilder\QueryBuilder;
-use Knuckles\Scribe\Attributes\Group;
-use Knuckles\Scribe\Attributes\Endpoint;
-use Knuckles\Scribe\Attributes\QueryParam;
-use Knuckles\Scribe\Attributes\BodyParam;
-use Knuckles\Scribe\Attributes\Response;
 
-#[Group('Сообщения')]
 class MessageController extends Controller
 {
-	#[Endpoint(title: 'Список сообщений чата')]
-	#[QueryParam('filter[type]', description: 'Фильтр по типу сообщения (text, image, video, etc.)')]
-	#[QueryParam('filter[sender_id]', description: 'Фильтр по ID отправителя', example: 1)]
-	#[QueryParam('filter[before]', description: 'Сообщения до указанного ID (для пагинации)', example: 123)]
-	#[QueryParam('filter[after]', description: 'Сообщения после указанного ID (для пагинации)', example: 100)]
-	#[QueryParam('include', description: 'Включить связанные данные (sender, replyTo, chat)', example: 'sender,replyTo')]
-	#[QueryParam('sort', description: 'Сортировка: id, created_at, updated_at (префикс - для убывания)', example: '-id')]
-	#[QueryParam('fields[messages]', description: 'Выбрать конкретные поля', example: 'id,body,type,created_at')]
-	#[Response(
-		status: 200,
-		description: 'Список сообщений с курсорной пагинацией',
-		content: <<<'JSON'
-		{
-			"data": [
-				{
-					"id": 53,
-					"chat_id": 2,
-					"sender_id": 1,
-					"type": "text",
-					"body": "Привет, как дела?",
-					"reply_to_id": null,
-					"edited_at": null,
-					"created_at": "2026-03-11T11:36:31.000000Z",
-					"updated_at": "2026-03-11T11:36:31.000000Z",
-					"sender": {
-						"id": 1,
-						"name": "John",
-						"email": "john@example.com"
-					}
-				}
-			],
-			"path": "http://localhost/api/v1/chats/2/messages",
-			"per_page": 30,
-			"next_cursor": "eyJpZCI6NTN9",
-			"next_page_url": "http://localhost/api/v1/chats/2/messages?cursor=eyJpZCI6NTN9",
-			"prev_cursor": null,
-			"prev_page_url": null
-		}
-		JSON
-	)]
-	/**
-	 * Список сообщений чата (от старых к новым для пагинации)
-	 */
-	public function index(Request $request, Chat $chat): CursorPaginator
-	{
-		// Проверка: пользователь является участником чата
-		if (! $chat->members()->where('user_id', $request->user()->id)->exists()) {
-			abort(403, 'Not a member of this chat');
-		}
+    #[OA\Get(
+        path: '/api/v1/chats/{chatId}/messages',
+        summary: 'Список сообщений чата',
+        description: 'Возвращает список сообщений чата с курсорной пагинацией',
+        tags: ['Сообщения'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'chatId',
+                in: 'path',
+                required: true,
+                description: 'ID чата',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'filter[type]',
+                in: 'query',
+                description: 'Фильтр по типу сообщения',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['text', 'image', 'video', 'audio', 'file'])
+            ),
+            new OA\Parameter(
+                name: 'filter[sender_id]',
+                in: 'query',
+                description: 'Фильтр по ID отправителя',
+                required: false,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'filter[before]',
+                in: 'query',
+                description: 'Сообщения до указанного ID (для пагинации)',
+                required: false,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'filter[after]',
+                in: 'query',
+                description: 'Сообщения после указанного ID (для пагинации)',
+                required: false,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'include',
+                in: 'query',
+                description: 'Включить связанные данные (sender, replyTo, chat)',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'sort',
+                in: 'query',
+                description: 'Сортировка: id, created_at, updated_at (префикс - для убывания)',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Список сообщений с курсорной пагинацией',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Message')),
+                        new OA\Property(property: 'meta', ref: '#/components/schemas/CursorPaginationMeta'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Пользователь не аутентифицирован',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Нет доступа к чату',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Not a member of this chat'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function index(Request $request, Chat $chat): CursorPaginator
+    {
+        if (! $chat->members()->where('user_id', $request->user()->id)->exists()) {
+            abort(403, 'Not a member of this chat');
+        }
 
-		$query = QueryBuilder::for(Message::class)
-			->allowedFilters($chat->messages()->getModel()->allowedFilters())
-			->allowedIncludes($chat->messages()->getModel()->allowedIncludes())
-			->allowedSorts($chat->messages()->getModel()->allowedSorts())
-			->defaultSort('-created_at')
-			->where('chat_id', $chat->id);
+        $query = QueryBuilder::for(Message::class)
+            ->allowedFilters($chat->messages()->getModel()->allowedFilters())
+            ->allowedIncludes($chat->messages()->getModel()->allowedIncludes())
+            ->allowedSorts($chat->messages()->getModel()->allowedSorts())
+            ->defaultSort('-created_at')
+            ->where('chat_id', $chat->id);
 
-		$paginator = $query->cursorPaginate(30);
+        $paginator = $query->cursorPaginate(30);
 
-		$items = collect($paginator->items())
-			->reverse()
-			->values()
-			->all();
+        $items = collect($paginator->items())
+            ->reverse()
+            ->values()
+            ->all();
 
-		return new CursorPaginator(
-			$items,
-			$paginator->perPage(),
-			$paginator->cursor(),
-			[
-				'path' => $request->url(),
-				'parameters' => $request->query(),
-			]
-		);
-	}
+        return new CursorPaginator(
+            $items,
+            $paginator->perPage(),
+            $paginator->cursor(),
+            [
+                'path' => $request->url(),
+                'parameters' => $request->query(),
+            ]
+        );
+    }
 
-	/**
-	 * Создать сообщение
-	 */
-	#[Endpoint(title: 'Создать сообщение', description: 'Отправляет новое сообщение в чат.')]
-	#[BodyParam('type', required: true, type: 'string', example: 'text', description: 'Тип сообщения: text, image, video, audio, file', enum: ['text', 'image', 'video', 'audio', 'file'])]
-	#[BodyParam('body', required: true, type: 'string', example: 'Привет, как дела?', description: 'Текст сообщения или описание медиа')]
-	#[BodyParam('reply_to_id', required: false, type: 'int', example: 123, description: 'ID сообщения, на которое отвечаем')]
-	#[Response(
-		status: 201,
-		description: 'Сообщение создано',
-		content: <<<'JSON'
-		{
-			"id": 456,
-			"chat_id": 1,
-			"sender_id": 2,
-			"type": "text",
-			"body": "Привет, как дела?",
-			"reply_to_id": null,
-			"edited_at": null,
-			"created_at": "2026-03-11T11:36:31.000000Z",
-			"updated_at": "2026-03-11T11:36:31.000000Z",
-			"sender": {
-				"id": 2,
-				"name": "John",
-				"email": "john@example.com",
-				"created_at": "2026-02-28T10:30:00.000000Z",
-				"updated_at": "2026-02-28T10:30:00.000000Z"
-			}
-		}
-		JSON
-	)]
-	#[Response(status: 403, description: 'Пользователь не является участником чата', content: ['message' => 'Not a member of this chat'])]
-	#[Response(status: 422, description: 'Ошибка валидации', content: [
-		'message' => 'The body field is required.',
-		'errors' => ['body' => ['The body field is required.']],
-	])]
-	public function store(Request $request, Chat $chat, CreateMessageData $data): Message
-	{
-		// Проверка: пользователь является участником чата
-		if (! $chat->members()->where('user_id', $request->user()->id)->exists()) {
-			abort(403, 'Not a member of this chat');
-		}
+    #[OA\Post(
+        path: '/api/v1/chats/{chatId}/messages',
+        summary: 'Создать сообщение',
+        description: 'Отправляет новое сообщение в чат',
+        tags: ['Сообщения'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'chatId',
+                in: 'path',
+                required: true,
+                description: 'ID чата',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['type', 'body'],
+                properties: [
+                    new OA\Property(property: 'type', type: 'string', enum: ['text', 'image', 'video', 'audio', 'file'], example: 'text', description: 'Тип сообщения'),
+                    new OA\Property(property: 'body', type: 'string', example: 'Привет, как дела?', description: 'Текст сообщения или описание медиа'),
+                    new OA\Property(property: 'reply_to_id', type: 'integer', nullable: true, example: 123, description: 'ID сообщения, на которое отвечаем'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Сообщение создано',
+                content: new OA\JsonContent(ref: '#/components/schemas/Message')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Пользователь не является участником чата',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Not a member of this chat'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Ошибка валидации',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')
+            ),
+        ]
+    )]
+    public function store(Request $request, Chat $chat, CreateMessageData $data): Message
+    {
+        if (! $chat->members()->where('user_id', $request->user()->id)->exists()) {
+            abort(403, 'Not a member of this chat');
+        }
 
-		$message = Message::create([
-			'chat_id' => $chat->id,
-			'sender_id' => $request->user()->id,
-			'type' => $data->type,
-			'body' => $data->body,
-			'reply_to_id' => $data->reply_to_id,
-		]);
+        $message = Message::create([
+            'chat_id' => $chat->id,
+            'sender_id' => $request->user()->id,
+            'type' => $data->type,
+            'body' => $data->body,
+            'reply_to_id' => $data->reply_to_id,
+        ]);
 
-		// Обновляем last_message_id
-		$chat->update(['last_message_id' => $message->id]);
+        $chat->update(['last_message_id' => $message->id]);
 
-		// TODO: send broadcast event
+        return $message->load('sender');
+    }
 
-		return $message->load('sender');
-	}
+    #[OA\Get(
+        path: '/api/v1/chats/{chatId}/messages/{message}',
+        summary: 'Показать сообщение',
+        description: 'Возвращает одно сообщение по ID',
+        tags: ['Сообщения'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'chatId',
+                in: 'path',
+                required: true,
+                description: 'ID чата',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'message',
+                in: 'path',
+                required: true,
+                description: 'ID сообщения',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Сообщение найдено',
+                content: new OA\JsonContent(ref: '#/components/schemas/Message')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Пользователь не является участником чата',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Not a member of this chat'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Сообщение не найдено',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Сообщение не найдено'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function show(Request $request, Message $message): Message
+    {
+        $chat = $message->chat;
+        if (! $chat->members()->where('user_id', $request->user()->id)->exists()) {
+            abort(403, 'Not a member of this chat');
+        }
 
-	/**
-	 * Показать одно сообщение
-	 */
-	#[Endpoint(title: 'Показать сообщение', description: 'Возвращает одно сообщение по ID.')]
-	#[Response(
-		status: 200,
-		description: 'Сообщение найдено',
-		content: <<<'JSON'
-		{
-			"id": 456,
-			"chat_id": 1,
-			"sender_id": 2,
-			"type": "text",
-			"body": "Привет, как дела?",
-			"reply_to_id": null,
-			"edited_at": null,
-			"created_at": "2026-03-11T11:36:31.000000Z",
-			"updated_at": "2026-03-11T11:36:31.000000Z",
-			"sender": {
-				"id": 2,
-				"name": "John",
-				"email": "john@example.com"
-			},
-			"reply_to": null
-		}
-		JSON
-	)]
-	#[Response(status: 403, description: 'Пользователь не является участником чата')]
-	#[Response(status: 404, description: 'Сообщение не найдено')]
-	public function show(Request $request, Message $message): Message
-	{
-		// Проверка: пользователь является участником чата
-		$chat = $message->chat;
-		if (! $chat->members()->where('user_id', $request->user()->id)->exists()) {
-			abort(403, 'Not a member of this chat');
-		}
+        return $message->load('sender', 'replyTo');
+    }
 
-		return $message->load('sender', 'replyTo');
-	}
+    #[OA\Put(
+        path: '/api/v1/chats/{chatId}/messages/{message}',
+        summary: 'Редактировать сообщение',
+        description: 'Обновляет текст сообщения. Только автор может редактировать',
+        tags: ['Сообщения'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'chatId',
+                in: 'path',
+                required: true,
+                description: 'ID чата',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'message',
+                in: 'path',
+                required: true,
+                description: 'ID сообщения',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'body', type: 'string', example: 'Обновлённый текст', description: 'Новый текст сообщения'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Сообщение обновлено',
+                content: new OA\JsonContent(ref: '#/components/schemas/Message')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Только автор может редактировать',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Cannot edit this message'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function update(Request $request, Message $message, UpdateMessageData $data): Message
+    {
+        if ($message->sender_id !== $request->user()->id) {
+            abort(403, 'Cannot edit this message');
+        }
 
-	/**
-	 * Редактировать сообщение
-	 */
-	#[Endpoint(title: 'Редактировать сообщение', description: 'Обновляет текст сообщения. Только автор может редактировать.')]
-	#[BodyParam('body', required: false, type: 'string', example: 'Обновлённый текст', description: 'Новый текст сообщения')]
-	#[Response(
-		status: 200,
-		description: 'Сообщение обновлено',
-		content: <<<'JSON'
-		{
-			"id": 456,
-			"chat_id": 1,
-			"sender_id": 2,
-			"type": "text",
-			"body": "Обновлённый текст",
-			"reply_to_id": null,
-			"edited_at": "2026-03-11T12:00:00.000000Z",
-			"created_at": "2026-03-11T11:36:31.000000Z",
-			"updated_at": "2026-03-11T12:00:00.000000Z",
-			"sender": {
-				"id": 2,
-				"name": "John",
-				"email": "john@example.com"
-			}
-		}
-		JSON
-	)]
-	#[Response(status: 403, description: 'Только автор может редактировать')]
-	public function update(Request $request, Message $message, UpdateMessageData $data): Message
-	{
-		// Проверка: только автор может редактировать
-		if ($message->sender_id !== $request->user()->id) {
-			abort(403, 'Cannot edit this message');
-		}
+        $message->update([
+            'body' => $data->body ?? $message->body,
+            'edited_at' => now(),
+        ]);
 
-		$message->update([
-			'body' => $data->body ?? $message->body,
-			'edited_at' => now(),
-		]);
+        return $message->fresh('sender', 'replyTo');
+    }
 
-		return $message->fresh('sender', 'replyTo');
-	}
+    #[OA\Delete(
+        path: '/api/v1/chats/{chatId}/messages/{message}',
+        summary: 'Удалить сообщение',
+        description: 'Удаляет сообщение. Только автор или модератор/владелец',
+        tags: ['Сообщения'],
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'chatId',
+                in: 'path',
+                required: true,
+                description: 'ID чата',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'message',
+                in: 'path',
+                required: true,
+                description: 'ID сообщения',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Сообщение удалено',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'success'),
+                        new OA\Property(property: 'message', type: 'string', example: 'The message was successfully deleted.'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Нет прав на удаление',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Cannot delete this message'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function destroy(Request $request, Message $message): JsonResponse
+    {
+        $chat = $message->chat;
+        $member = $chat->members()->where('user_id', $request->user()->id)->first();
 
-	/**
-	 * Удалить сообщение
-	 */
-	#[Endpoint(title: 'Удалить сообщение', description: 'Удаляет сообщение. Только автор или модератор/владелец.')]
-	#[Response(status: 200, description: 'Сообщение удалено', content: [
-		'status' => 'success',
-		'message' => 'The message was successfully deleted.',
-	])]
-	#[Response(status: 403, description: 'Нет прав на удаление')]
-	public function destroy(Request $request, Message $message): JsonResponse
-	{
-		// Проверка: только автор или модератор/владелец чата
-		$chat   = $message->chat;
-		$member = $chat->members()->where('user_id', $request->user()->id)->first();
+        if (! $member || (
+            $message->sender_id !== $request->user()->id &&
+            ! in_array($member->pivot->role, ['owner', 'moderator'])
+        )) {
+            abort(403, 'Cannot delete this message');
+        }
 
-		if (! $member || (
-			$message->sender_id !== $request->user()->id &&
-			! in_array($member->pivot->role, ['owner', 'moderator'])
-		)) {
-			abort(403, 'Cannot delete this message');
-		}
+        $message->delete();
 
-		$message->delete();
-
-		return response()->json([
-			'status' => 'success',
-			'message' => 'The message was successfully deleted.'
-		]);
-	}
+        return response()->json([
+            'status' => 'success',
+            'message' => 'The message was successfully deleted.',
+        ]);
+    }
 }

@@ -11,123 +11,151 @@ use App\Data\Auth\UserResponseData;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Knuckles\Scribe\Attributes\BodyParam;
-use Knuckles\Scribe\Attributes\Endpoint;
-use Knuckles\Scribe\Attributes\Group;
-use Knuckles\Scribe\Attributes\Response;
+use OpenApi\Attributes as OA;
 
-#[Group('Авторизация')]
 class AuthController extends Controller
 {
-	#[Endpoint(title: 'Регистрация', description: 'Регистрирует нового пользователя и возвращает токен доступа.')]
-	#[BodyParam('email', required: true, type: 'string', example: 'user@example.com', description: 'Email адрес пользователя')]
-	#[BodyParam('password', required: true, type: 'string', example: 'secret123', description: 'Пароль (минимум 8 символов)')]
-	#[Response(
-		status: 201,
-		description: 'Пользователь зарегистрирован',
-		content: [
-			'user' => [
-				'id' => 1,
-				'name' => 'John Doe',
-				'email' => 'user@example.com',
-				'email_verified_at' => null,
-				'created_at' => '2026-03-11T11:36:31.000000Z',
-				'updated_at' => '2026-03-11T11:36:31.000000Z',
-			],
-			'token' => ['token' => '1|abc123xyz456', 'type' => 'Bearer'],
-		]
-	)]
-	#[Response(
-		status: 422,
-		description: 'Ошибка валидации',
-		content: [
-			'message' => 'The email field is required. (and 1 more error)',
-			'errors' => [
-				'email' => ['The email field is required.'],
-				'password' => ['The password field is required.'],
-			],
-		]
-	)]
-	#[Response(
-		status: 409,
-		description: 'Пользователь с таким email уже существует',
-		content: ['message' => 'Пользователь с таким email уже зарегистрирован']
-	)]
-	public function register(RegisterUserData $data, RegisterUserAction $action): JsonResponse
-	{
-		$user = $action->execute($data);
+    #[OA\Post(
+        path: '/api/v1/auth/register',
+        summary: 'Регистрация нового пользователя',
+        description: 'Создаёт нового пользователя и возвращает токен доступа',
+        tags: ['Авторизация'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'password'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'user@example.com'),
+                    new OA\Property(property: 'password', type: 'string', minLength: 8, example: 'secret123'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Успешная регистрация',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'user', ref: '#/components/schemas/User'),
+                        new OA\Property(property: 'token', ref: '#/components/schemas/AuthToken'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Ошибка валидации',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Пользователь уже существует',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Пользователь с таким email уже зарегистрирован'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function register(RegisterUserData $data, RegisterUserAction $action): JsonResponse
+    {
+        $user = $action->execute($data);
+        $token = $user->createToken('api')->plainTextToken;
 
-		$token = $user->createToken('api')->plainTextToken;
+        return response()->json([
+            'user' => UserResponseData::fromModel($user),
+            'token' => new AuthTokenData($token),
+        ], 201);
+    }
 
-		return response()->json([
-			'user' => UserResponseData::fromModel($user),
-			'token' => new AuthTokenData($token),
-		], 201);
-	}
+    #[OA\Post(
+        path: '/api/v1/auth/login',
+        summary: 'Вход',
+        description: 'Аутентификация пользователя и получение токена доступа',
+        tags: ['Авторизация'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'password'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'user@example.com'),
+                    new OA\Property(property: 'password', type: 'string', example: 'password'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Успешный вход',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'user', ref: '#/components/schemas/User'),
+                        new OA\Property(property: 'token', ref: '#/components/schemas/AuthToken'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Неверные учётные данные',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Неверный email или пароль'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Ошибка валидации',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')
+            ),
+        ]
+    )]
+    public function login(LoginUserData $data, LoginUserAction $action): JsonResponse
+    {
+        $user = $action->execute(
+            $data->email,
+            $data->password
+        );
 
-	#[Endpoint(title: 'Вход', description: 'Аутентификация пользователя и получение токена доступа.')]
-	#[BodyParam('email', required: true, type: 'string', example: 'user@example.com', description: 'Email адрес пользователя')]
-	#[BodyParam('password', required: true, type: 'string', example: 'password', description: 'Пароль пользователя')]
-	#[Response(
-		status: 200,
-		description: 'Успешный вход',
-		content: [
-			'user' => [
-				'id' => 1,
-				'name' => 'John Doe',
-				'email' => 'user@example.com',
-				'email_verified_at' => '2026-03-11T11:36:31.000000Z',
-				'created_at' => '2026-03-11T11:36:31.000000Z',
-				'updated_at' => '2026-03-11T11:36:31.000000Z',
-			],
-			'token' => ['token' => '1|abc123xyz456', 'type' => 'Bearer'],
-		]
-	)]
-	#[Response(
-		status: 401,
-		description: 'Неверные учётные данные',
-		content: ['message' => 'Неверный email или пароль']
-	)]
-	#[Response(
-		status: 422,
-		description: 'Ошибка валидации',
-		content: [
-			'message' => 'The email field is required. (and 1 more error)',
-			'errors' => [
-				'email' => ['The email field is required.'],
-				'password' => ['The password field is required.'],
-			],
-		]
-	)]
-	public function login(LoginUserData $data, LoginUserAction $action): JsonResponse
-	{
-		$user = $action->execute(
-			$data->email,
-			$data->password
-		);
+        $token = $user->createToken('api')->plainTextToken;
 
-		$token = $user->createToken('api')->plainTextToken;
+        return response()->json([
+            'user' => UserResponseData::fromModel($user),
+            'token' => new AuthTokenData($token),
+        ]);
+    }
 
-		return response()->json([
-			'user' => UserResponseData::fromModel($user),
-			'token' => new AuthTokenData($token),
-		]);
-	}
+    #[OA\Post(
+        path: '/api/v1/auth/logout',
+        summary: 'Выход',
+        description: 'Уничтожает текущий токен доступа (выход из системы)',
+        tags: ['Авторизация'],
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Успешный выход',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Успешный выход'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Пользователь не аутентифицирован',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
 
-	#[Endpoint(title: 'Выход', description: 'Уничтожает текущий токен доступа (выход из системы).')]
-	#[Response(
-		status: 200,
-		content: ['message' => 'Успешный выход']
-	)]
-	#[Response(
-		status: 401,
-		description: 'Пользователь не аутентифицирован',
-		content: ['message' => 'Unauthenticated.']
-	)]
-	public function logout(Request $request): JsonResponse
-	{
-		$request->user()->currentAccessToken()->delete();
-
-		return response()->json(['message' => 'Успешный выход']);
-	}
+        return response()->json(['message' => 'Успешный выход']);
+    }
 }

@@ -3,6 +3,7 @@
 .env
 .env.backup
 .env.production
+.qwen
 .phpactor.json
 .phpunit.result.cache
 /.scribe
@@ -19,6 +20,7 @@
 /public/vendor
 /public/hot
 /public/storage
+/public/docs
 /storage/*.key
 /storage/pail
 /vendor

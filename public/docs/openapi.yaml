@@ -31,13 +31,13 @@ security:
 paths:
   /api/v1/auth/register:
     post:
-      summary: Регистрация
+      summary: 'Регистрация нового пользователя'
       operationId: ''
-      description: 'Регистрирует нового пользователя и возвращает токен доступа.'
+      description: ''
       parameters: []
       responses:
         201:
-          description: 'Пользователь зарегистрирован'
+          description: 'Успешная регистрация'
           content:
             application/json:
               schema:
@@ -86,7 +86,7 @@ paths:
                         type: string
                         example: Bearer
         409:
-          description: 'Пользователь с таким email уже существует'
+          description: 'Пользователь уже существует'
           content:
             application/json:
               schema:
@@ -637,7 +637,7 @@ paths:
         in: path
         name: chat_id
         description: 'The ID of the chat.'
-        example: 1
+        example: 2
         required: true
         schema:
           type: integer
@@ -1238,7 +1238,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the chat.'
-        example: 1
+        example: 2
         required: true
         schema:
           type: integer

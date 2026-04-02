@@ -47,15 +47,6 @@ class AuthController extends Controller
                 description: 'Ошибка валидации',
                 content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')
             ),
-            new OA\Response(
-                response: 409,
-                description: 'Пользователь уже существует',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'Пользователь с таким email уже зарегистрирован'),
-                    ]
-                )
-            ),
         ]
     )]
     public function register(RegisterUserData $data, RegisterUserAction $action): JsonResponse

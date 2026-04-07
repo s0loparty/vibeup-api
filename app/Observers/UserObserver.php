@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Data\User\FullUserData;
 use App\Models\User;
 
 class UserObserver
@@ -12,7 +13,10 @@ class UserObserver
 	public function created(User $user): void
 	{
 		[$username] = explode('@', $user->email);
-		$user->update(['name' => $username]);
+
+		$user->withoutEvents(function () use ($user, $username) {
+			$user->update(['username' => $username]);
+		});
 	}
 
 	/**

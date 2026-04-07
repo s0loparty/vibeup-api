@@ -9,7 +9,8 @@ class FullUserData extends Data
 {
 	public function __construct(
 		public int $id,
-		public string $name,
+		public string $username,
+		public ?string $bio,
 		public string $email,
 		public ?string $remember_token,
 		public ?CarbonImmutable $email_verified_at,

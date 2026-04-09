@@ -19,9 +19,9 @@ class Message extends Model
 
 	protected $casts = [
 		'type' => MessageType::class,
-		'edited_at' => 'datetime',
-		'created_at' => 'datetime',
-		'updated_at' => 'datetime',
+		'edited_at' => 'datetime:d.m.Y H:i',
+		'created_at' => 'datetime:d.m.Y H:i',
+		'updated_at' => 'datetime:d.m.Y H:i',
 	];
 
 	/**

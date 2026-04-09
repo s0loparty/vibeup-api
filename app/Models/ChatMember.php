@@ -16,6 +16,7 @@ class ChatMember extends Model
 
 	protected $casts = [
 		'role' => ChatMemberRole::class,
+		'joined_at' => 'datetime:d.m.Y H:i',
 	];
 
 	public function user(): BelongsTo

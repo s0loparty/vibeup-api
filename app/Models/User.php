@@ -16,11 +16,11 @@ use OpenApi\Attributes as OA;
 	schema: 'User',
 	title: 'User',
 	description: 'User model',
-	required: ['id', 'username', 'email'],
+	required: ['id', 'username', 'bio', 'email'],
 	properties: [
 		new OA\Property(property: 'id', type: 'integer', example: 1),
 		new OA\Property(property: 'username', type: 'string', example: 'John Doe'),
-		new OA\Property(property: 'bio', type: 'string', nullable: true, example: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequuntur, labore!'),
+		new OA\Property(property: 'bio', type: 'string', nullable: true, example: 'Lorem ipsum dolor sit amet consectetur adipisicing elit.'),
 		new OA\Property(property: 'email', type: 'string', format: 'email', example: 'john@example.com'),
 		new OA\Property(property: 'email_verified_at', type: 'string', format: 'date-time', nullable: true),
 		new OA\Property(property: 'last_seen_at', type: 'string', format: 'date-time', nullable: true),
@@ -64,8 +64,10 @@ class User extends Authenticatable
 	protected function casts(): array
 	{
 		return [
-			'email_verified_at' => 'datetime',
-			'last_seen_at' => 'datetime',
+			'created_at' => 'datetime:d.m.Y H:i',
+			'updated_at' => 'datetime:d.m.Y H:i',
+			'email_verified_at' => 'datetime:d.m.Y H:i',
+			'last_seen_at' => 'datetime:d.m.Y H:i',
 			'password' => 'hashed',
 		];
 	}

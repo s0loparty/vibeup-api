@@ -19,6 +19,8 @@ class Chat extends Model
 
 	protected $casts = [
 		'type' => ChatType::class,
+		'created_at' => 'datetime:d.m.Y H:i',
+		'updated_at' => 'datetime:d.m.Y H:i',
 	];
 
 	protected $fillable = ['type', 'title', 'created_by', 'last_message_id'];

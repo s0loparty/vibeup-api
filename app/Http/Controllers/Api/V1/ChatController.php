@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Data\Chat\CreateChatData;
 use App\Data\Chat\UpdateChatData;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CursorPaginatedResource;
 use App\Models\Chat;
 use App\Services\ChatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\CursorPaginator;
 use OpenApi\Attributes as OA;
+use Spatie\QueryBuilder\AllowedSort;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class ChatController extends Controller
@@ -27,6 +28,13 @@ class ChatController extends Controller
         tags: ['Чаты'],
         security: [['bearerAuth' => []]],
         parameters: [
+            new OA\Parameter(
+                name: 'cursor',
+                in: 'query',
+                description: 'Курсор для пагинации (значение из meta.next_cursor или meta.prev_cursor)',
+                required: false,
+                schema: new OA\Schema(type: 'string', example: 'eyJpZCI6NTN9')
+            ),
             new OA\Parameter(
                 name: 'filter[type]',
                 in: 'query',
@@ -46,19 +54,14 @@ class ChatController extends Controller
                 in: 'query',
                 description: 'Сортировка: id, created_at, updated_at (префикс - для убывания)',
                 required: false,
-                schema: new OA\Schema(type: 'string')
+                schema: new OA\Schema(type: 'string', example: '-updated_at')
             ),
         ],
         responses: [
             new OA\Response(
                 response: 200,
                 description: 'Список чатов с курсорной пагинацией',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Chat')),
-                        new OA\Property(property: 'meta', ref: '#/components/schemas/CursorPaginationMeta'),
-                    ]
-                )
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedChatsResponse')
             ),
             new OA\Response(
                 response: 401,
@@ -71,17 +74,23 @@ class ChatController extends Controller
             ),
         ]
     )]
-    public function index(Request $request): CursorPaginator
+    public function index(Request $request): CursorPaginatedResource
     {
         $user = $request->user();
 
         $query = QueryBuilder::for($user->chats())
             ->allowedFilters(['type'])
             ->allowedIncludes(['members', 'lastMessage', 'creator'])
-            ->allowedSorts(['id', 'created_at', 'updated_at'])
-            ->defaultSort('-updated_at');
+            ->allowedSorts([
+                AllowedSort::field('id'),
+                AllowedSort::field('created_at'),
+                AllowedSort::field('updated_at'),
+            ])
+            ->defaultSort('-chats.updated_at');
 
-        return $query->cursorPaginate(30);
+        $paginator = $query->cursorPaginate(30);
+
+        return new CursorPaginatedResource($paginator);
     }
 
     #[OA\Post(
@@ -146,8 +155,8 @@ class ChatController extends Controller
 
         return response()->json(
             $result['exists'] ?? false
-                ? ['message' => 'Чат с этим пользователем уже существует', 'chat' => $result['chat']]
-                : ['message' => 'Чат успешно создан', 'chat' => $result['chat']],
+            ? ['message' => 'Чат с этим пользователем уже существует', 'chat' => $result['chat']]
+            : ['message' => 'Чат успешно создан', 'chat' => $result['chat']],
             $result['status']
         );
     }

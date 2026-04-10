@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Data\Message\CreateMessageData;
 use App\Data\Message\UpdateMessageData;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CursorPaginatedResource;
 use App\Models\Chat;
 use App\Models\Message;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\CursorPaginator;
 use OpenApi\Attributes as OA;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -31,6 +31,13 @@ class MessageController extends Controller
                 schema: new OA\Schema(type: 'integer')
             ),
             new OA\Parameter(
+                name: 'cursor',
+                in: 'query',
+                description: 'Курсор для пагинации (значение из meta.next_cursor или meta.prev_cursor)',
+                required: false,
+                schema: new OA\Schema(type: 'string', example: 'eyJpZCI6NTN9')
+            ),
+            new OA\Parameter(
                 name: 'filter[type]',
                 in: 'query',
                 description: 'Фильтр по типу сообщения',
@@ -41,20 +48,6 @@ class MessageController extends Controller
                 name: 'filter[sender_id]',
                 in: 'query',
                 description: 'Фильтр по ID отправителя',
-                required: false,
-                schema: new OA\Schema(type: 'integer')
-            ),
-            new OA\Parameter(
-                name: 'filter[before]',
-                in: 'query',
-                description: 'Сообщения до указанного ID (для пагинации)',
-                required: false,
-                schema: new OA\Schema(type: 'integer')
-            ),
-            new OA\Parameter(
-                name: 'filter[after]',
-                in: 'query',
-                description: 'Сообщения после указанного ID (для пагинации)',
                 required: false,
                 schema: new OA\Schema(type: 'integer')
             ),
@@ -70,19 +63,14 @@ class MessageController extends Controller
                 in: 'query',
                 description: 'Сортировка: id, created_at, updated_at (префикс - для убывания)',
                 required: false,
-                schema: new OA\Schema(type: 'string')
+                schema: new OA\Schema(type: 'string', example: '-created_at')
             ),
         ],
         responses: [
             new OA\Response(
                 response: 200,
                 description: 'Список сообщений с курсорной пагинацией',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Message')),
-                        new OA\Property(property: 'meta', ref: '#/components/schemas/CursorPaginationMeta'),
-                    ]
-                )
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedMessagesResponse')
             ),
             new OA\Response(
                 response: 401,
@@ -104,7 +92,7 @@ class MessageController extends Controller
             ),
         ]
     )]
-    public function index(Request $request, Chat $chat): CursorPaginator
+    public function index(Request $request, Chat $chat): CursorPaginatedResource
     {
         if (! $chat->members()->where('user_id', $request->user()->id)->exists()) {
             abort(403, 'Not a member of this chat');
@@ -124,15 +112,7 @@ class MessageController extends Controller
             ->values()
             ->all();
 
-        return new CursorPaginator(
-            $items,
-            $paginator->perPage(),
-            $paginator->cursor(),
-            [
-                'path' => $request->url(),
-                'parameters' => $request->query(),
-            ]
-        );
+        return new CursorPaginatedResource($paginator, ['data' => $items]);
     }
 
     #[OA\Post(

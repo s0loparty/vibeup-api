@@ -3,10 +3,10 @@
 namespace App\Actions\Chat;
 
 use App\Data\Chat\CreateChatData;
+use App\Enums\ChatMemberRole;
+use App\Enums\ChatType;
 use App\Models\Chat;
 use App\Models\User;
-use App\Enums\ChatType;
-use App\Enums\ChatMemberRole;
 use Illuminate\Support\Facades\DB;
 
 final class CreateChatAction
@@ -14,6 +14,8 @@ final class CreateChatAction
 	public function execute(User $user, CreateChatData $data): array
 	{
 		return DB::transaction(function () use ($user, $data) {
+			// Для приватного чата сохраняем ID собеседника
+
 			// Создаём чат
 			$chat = Chat::create([
 				'type' => $data->type,

@@ -9,10 +9,11 @@ use Spatie\LaravelData\Data;
 
 class CreateChatData extends Data
 {
-    public function __construct(
-        #[Required, Enum(ChatType::class)]
-        public ChatType $type,
-        public ?string $title = null,
-        public ?int $participant_id = null,
-    ) {}
+	public function __construct(
+		#[Required, Enum(ChatType::class)]
+		public ChatType $type,
+		public ?string $title = null,
+		public ?int $participant_id = null,
+	) {
+	}
 }

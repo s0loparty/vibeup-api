@@ -2,6 +2,7 @@
 
 namespace App\Data\Chat;
 
+use App\Data\User\PublicUserData;
 use App\Enums\ChatType;
 use App\Models\Message;
 use Carbon\CarbonImmutable;
@@ -11,20 +12,15 @@ class ShowChatData extends Data
 {
 	public function __construct(
 		public int $id,
-
 		public ChatType $type,
-
-		public ?string $title = null,
-
+		public ?string $title,
+		public string $display_title,
 		public int $created_by,
-
-		public CarbonImmutable $created_at,
-
-		public ?int $last_message_id = null,
-
+		public ?int $last_message_id,
 		public ?Message $last_message,
-
-		public ?UserData $creator,
+		public CarbonImmutable $created_at,
+		public CarbonImmutable $updated_at,
+		public ?PublicUserData $creator = null,
 	) {
 	}
 }

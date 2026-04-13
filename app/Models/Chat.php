@@ -3,18 +3,20 @@
 namespace App\Models;
 
 use App\Enums\ChatType;
+use Database\Factories\ChatFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\AllowedSort;
 
 class Chat extends Model
 {
-	/** @use HasFactory<\Database\Factories\ChatFactory> */
+	/** @use HasFactory<ChatFactory> */
 	use HasFactory;
 
 	protected $casts = [
@@ -24,6 +26,35 @@ class Chat extends Model
 	];
 
 	protected $fillable = ['type', 'title', 'created_by', 'last_message_id'];
+
+	protected $appends = ['display_title'];
+
+	protected $hidden = ['pivot'];
+
+	public function getDisplayTitleAttribute(): ?string
+	{
+		$userId = Auth::id();
+
+		if ($this->isPrivate()) {
+			$other = $this->getOtherUser($userId);
+			return $other?->username;
+		}
+
+		return $this->title;
+	}
+
+	public function getOtherUser(int $currentUserId): ?User
+	{
+		if (! $this->isPrivate()) {
+			return null;
+		}
+
+		if (! $this->load('members')) {
+			return null;
+		}
+
+		return $this->members->firstWhere('id', '!=', $currentUserId);
+	}
 
 	/**
 	 * Разрешённые фильтры
@@ -94,14 +125,5 @@ class Chat extends Model
 	public function isPrivate(): bool
 	{
 		return $this->type === ChatType::PRIVATE;
-	}
-
-	public function getOtherUser(int $currentUserId): ?User
-	{
-		if ($this->type !== ChatType::PRIVATE) {
-			return null;
-		}
-
-		return $this->members->firstWhere('id', '!=', $currentUserId);
 	}
 }

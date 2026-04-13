@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Data\Chat\CreateChatData;
 use App\Data\Chat\UpdateChatData;
+use App\Enums\ChatType;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CursorPaginatedResource;
 use App\Models\Chat;
@@ -88,20 +89,20 @@ class ChatController extends Controller
 				AllowedSort::field('created_at'),
 				AllowedSort::field('updated_at'),
 			])
-			->defaultSort('-chats.updated_at');
+			->defaultSort('-chats.updated_at', '-chats.id');
 
 		// Всегда загружаем last_message
-		$query->with('lastMessage');
+		$query->with(['lastMessage']);
 
 		// Подзапрос для получения имени собеседника (только для приватных чатов)
 		// Для групп вернёт NULL
-		$query->addSelect([
-			'participant_name' => User::select('username')
-				->join('chat_members', 'users.id', '=', 'chat_members.user_id')
-				->whereColumn('chat_members.chat_id', 'chats.id')
-				->where('chat_members.user_id', '!=', $user->id)
-				->limit(1),
-		]);
+		// $query->addSelect([
+		// 	'participant_name' => User::select('username')
+		// 		->join('chat_members', 'users.id', '=', 'chat_members.user_id')
+		// 		->whereColumn('chat_members.chat_id', 'chats.id')
+		// 		->where('chat_members.user_id', '!=', $user->id)
+		// 		->limit(1),
+		// ])->select('chats.*');
 
 		$paginator = $query->cursorPaginate(30);
 

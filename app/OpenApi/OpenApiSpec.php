@@ -41,7 +41,6 @@ use OpenApi\Attributes as OA;
 				]
 			),
 
-<<<<<<< HEAD
 			// Auth Token Schema
 			new OA\Schema(
 				schema: 'AuthToken',
@@ -53,27 +52,6 @@ use OpenApi\Attributes as OA;
 					new OA\Property(property: 'type', type: 'string', example: 'Bearer'),
 				]
 			),
-=======
-            // Chat Schema
-            new OA\Schema(
-                schema: 'Chat',
-                title: 'Chat',
-                description: 'Чат',
-                required: ['id', 'type', 'created_by', 'display_title'],
-                properties: [
-                    new OA\Property(property: 'id', type: 'integer', example: 1),
-                    new OA\Property(property: 'type', type: 'string', enum: ['private', 'group'], example: 'private'),
-                    new OA\Property(property: 'title', type: 'string', nullable: true, description: 'Название группы (только для group)', example: 'Laravel Developers'),
-                    new OA\Property(property: 'created_by', type: 'integer', example: 1),
-                    new OA\Property(property: 'participant_name', type: 'string', nullable: true, description: 'Имя собеседника (только для private чатов)', example: 'John Doe'),
-                    new OA\Property(property: 'display_title', type: 'string', description: 'Отображаемый заголовок: для group - title, для private - participant_name', example: 'John Doe'),
-                    new OA\Property(property: 'last_message_id', type: 'integer', nullable: true),
-                    new OA\Property(property: 'last_message', ref: '#/components/schemas/Message', nullable: true),
-                    new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
-                    new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
-                ]
-            ),
->>>>>>> 5d0a1a7 (chat & messages paginate)
 
 			// Chat Schema
 			new OA\Schema(

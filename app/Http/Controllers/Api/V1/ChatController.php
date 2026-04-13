@@ -47,7 +47,7 @@ class ChatController extends Controller
 			new OA\Parameter(
 				name: 'include',
 				in: 'query',
-				description: 'Включить связанные данные (members, lastMessage, creator)',
+				description: 'Включить связанные данные (creator). lastMessage загружается всегда',
 				required: false,
 				schema: new OA\Schema(type: 'string')
 			),
@@ -78,14 +78,11 @@ class ChatController extends Controller
 	)]
 	public function index(Request $request): CursorPaginatedResource
 	{
-		/**
-		 * @var User
-		 */
 		$user = $request->user();
 
 		$query = QueryBuilder::for($user->chats())
 			->allowedFilters(['type'])
-			// ->allowedIncludes(['members', 'lastMessage', 'creator'])
+			->allowedIncludes(['creator'])
 			->allowedSorts([
 				AllowedSort::field('id'),
 				AllowedSort::field('created_at'),
@@ -93,7 +90,20 @@ class ChatController extends Controller
 			])
 			->defaultSort('-chats.updated_at');
 
-		$query->with(['lastMessage']);
+		// Всегда загружаем last_message
+		$query->with('lastMessage');
+
+		// Подзапрос для получения имени собеседника (только для приватных чатов)
+		// Для групп вернёт NULL
+		$query->addSelect([
+			'participant_name' => User::select('username')
+				->join('chat_members', 'users.id', '=', 'chat_members.user_id')
+				->whereColumn('chat_members.chat_id', 'chats.id')
+				->where('chat_members.user_id', '!=', $user->id)
+				->limit(1),
+		]);
+
+		$paginator = $query->cursorPaginate(30);
 
 		$paginator = $query->cursorPaginate(30);
 

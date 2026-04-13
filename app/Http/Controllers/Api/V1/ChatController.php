@@ -105,8 +105,6 @@ class ChatController extends Controller
 
 		$paginator = $query->cursorPaginate(30);
 
-		$paginator = $query->cursorPaginate(30);
-
 		return new CursorPaginatedResource($paginator);
 	}
 

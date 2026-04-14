@@ -36,16 +36,18 @@ class MinioSetupBuckets extends Command
             try {
                 $client = $this->createS3Client($diskName);
 
+                // Создаём бакет если не существует
                 if ($client->doesBucketExist($bucket)) {
                     $this->info("✓ Bucket {$bucket} already exists ({$diskName})");
                 } else {
                     $client->createBucket(['Bucket' => $bucket]);
-
-                    if ($visibility === 'public') {
-                        $this->setPublicBucketPolicy($client, $bucket);
-                    }
-
                     $this->info("✓ Created bucket {$bucket} ({$visibility})");
+                }
+
+                // Для публичных бакетов всегда применяем политику
+                if ($visibility === 'public') {
+                    $this->setPublicBucketPolicy($client, $bucket);
+                    $this->info("  ✓ Public policy applied for {$bucket}");
                 }
             } catch (\Exception $e) {
                 $this->error("Failed to setup bucket {$diskName}: {$e->getMessage()}");

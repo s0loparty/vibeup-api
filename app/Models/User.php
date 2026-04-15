@@ -16,113 +16,108 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 #[ObservedBy([UserObserver::class])]
 class User extends Authenticatable implements HasMedia
 {
-    use HasApiTokens, HasFactory, InteractsWithMedia, Notifiable;
+	use HasApiTokens, HasFactory, InteractsWithMedia, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'username',
-        'bio',
-        'email',
-        'password',
-        'last_seen_at',
-    ];
+	/**
+	 * The attributes that are mass assignable.
+	 *
+	 * @var list<string>
+	 */
+	protected $fillable = [
+		'username',
+		'bio',
+		'email',
+		'password',
+		'last_seen_at',
+	];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'media',
-        'pivot',
-        'password',
-        'remember_token',
-    ];
+	/**
+	 * The attributes that should be hidden for serialization.
+	 *
+	 * @var list<string>
+	 */
+	protected $hidden = [
+		'media',
+		'pivot',
+		'password',
+		'remember_token',
+	];
 
-    /**
-     * Атрибуты, которые всегда добавляются к JSON
-     */
-    protected $appends = ['avatar'];
+	/**
+	 * Get the attributes that should be cast.
+	 *
+	 * @return array<string, string>
+	 */
+	protected function casts(): array
+	{
+		return [
+			'created_at' => 'datetime:d.m.Y H:i',
+			'updated_at' => 'datetime:d.m.Y H:i',
+			'email_verified_at' => 'datetime:d.m.Y H:i',
+			'last_seen_at' => 'datetime:d.m.Y H:i',
+			'password' => 'hashed',
+		];
+	}
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'created_at' => 'datetime:d.m.Y H:i',
-            'updated_at' => 'datetime:d.m.Y H:i',
-            'email_verified_at' => 'datetime:d.m.Y H:i',
-            'last_seen_at' => 'datetime:d.m.Y H:i',
-            'password' => 'hashed',
-        ];
-    }
+	/**
+	 * Чаты, где пользователь является участником (через chat_members)
+	 */
+	public function chats(): BelongsToMany
+	{
+		return $this->belongsToMany(Chat::class, 'chat_members')
+			->withPivot(['role', 'last_read_message_id'])
+			->withTimestamps();
+	}
 
-    /**
-     * Чаты, где пользователь является участником (через chat_members)
-     */
-    public function chats(): BelongsToMany
-    {
-        return $this->belongsToMany(Chat::class, 'chat_members')
-            ->withPivot(['role', 'last_read_message_id'])
-            ->withTimestamps();
-    }
+	/**
+	 * Чаты, которые пользователь создал
+	 */
+	public function createdChats(): HasMany
+	{
+		return $this->hasMany(Chat::class, 'created_by');
+	}
 
-    /**
-     * Чаты, которые пользователь создал
-     */
-    public function createdChats(): HasMany
-    {
-        return $this->hasMany(Chat::class, 'created_by');
-    }
+	public function messages(): HasMany
+	{
+		return $this->hasMany(Message::class, 'sender_id');
+	}
 
-    public function messages(): HasMany
-    {
-        return $this->hasMany(Message::class, 'sender_id');
-    }
+	/**
+	 * Регистрация media collections
+	 */
+	public function registerMediaCollections(): void
+	{
+		$this->addMediaCollection('avatars')
+			->singleFile()
+			->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp'])
+			->registerMediaConversions(function () {
+				// Оптимизированная копия (сжатие + WebP)
+				$this->addMediaConversion('optimized')
+					->quality(85)
+					->format('webp');
 
-    /**
-     * Регистрация media collections
-     */
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('avatars')
-            ->singleFile()
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp'])
-            ->registerMediaConversions(function () {
-                // Оптимизированная копия (сжатие + WebP)
-                $this->addMediaConversion('optimized')
-                    ->quality(85)
-                    ->format('webp');
+				// Thumbnail 120x120
+				$this->addMediaConversion('thumbnail')
+					->width(120)
+					->height(120)
+					->format('webp');
+			});
+	}
 
-                // Thumbnail 120x120
-                $this->addMediaConversion('thumbnail')
-                    ->width(120)
-                    ->height(120)
-                    ->format('webp');
-            });
-    }
+	/**
+	 * Аксессор для получения URL аватарки (оригинал + thumbnail)
+	 */
+	public function getAvatarAttribute(): ?array
+	{
+		$media = $this->getFirstMedia('avatars');
 
-    /**
-     * Аксессор для получения URL аватарки (оригинал + thumbnail)
-     */
-    public function getAvatarAttribute(): ?array
-    {
-        $media = $this->getFirstMedia('avatars');
+		if ($media) {
+			return [
+				'original' => $media?->getFullUrl(),
+				'thumbnail' => $media?->getFullUrl('thumbnail'),
+			];
+		}
 
-        if ($media) {
-            return [
-                'original' => $media?->getFullUrl(),
-                'thumbnail' => $media?->getFullUrl('thumbnail'),
-            ];
-        }
-
-        return null;
-    }
+		return null;
+	}
 }

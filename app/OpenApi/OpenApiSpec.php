@@ -21,7 +21,7 @@ use OpenApi\Attributes as OA;
 				schema: 'User',
 				title: 'User',
 				description: 'Пользователь приложения',
-				required: ['id', 'username', 'email', 'avatar'],
+				required: ['id', 'username', 'email'],
 				properties: [
 					new OA\Property(property: 'id', type: 'integer', example: 1),
 					new OA\Property(property: 'username', type: 'string', example: 'John Doe'),
@@ -29,13 +29,6 @@ use OpenApi\Attributes as OA;
 					new OA\Property(property: 'email', type: 'string', format: 'email', example: 'john@example.com'),
 					new OA\Property(property: 'email_verified_at', type: 'string', format: 'date-time', nullable: true),
 					new OA\Property(property: 'last_seen_at', type: 'string', format: 'date-time', nullable: true),
-					new OA\Property(property: 'avatar', type: 'object', nullable: true,
-						description: 'Аватарка пользователя',
-						properties: [
-							new OA\Property(property: 'original', type: 'string', format: 'uri', nullable: true, description: 'URL оригинальной аватарки'),
-							new OA\Property(property: 'thumbnail', type: 'string', format: 'uri', nullable: true, description: 'URL thumbnail 120x120'),
-						]
-					),
 					new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
 					new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
 				]

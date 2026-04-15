@@ -1,11 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\AvatarController;
 use App\Http\Controllers\Api\V1\ChatController;
 use App\Http\Controllers\Api\V1\ChatFileController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\MessageController;
+use App\Http\Controllers\Api\V1\UserAvatarController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
@@ -18,9 +18,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         // Avatar routes
-        Route::post('/user/avatar', [AvatarController::class, 'upload'])->name('user.avatar.upload');
-        Route::delete('/user/avatar', [AvatarController::class, 'destroy'])->name('user.avatar.destroy');
-        Route::get('/users/{user}/avatar', [AvatarController::class, 'show'])->name('users.avatar.show');
+        Route::prefix('users/{user}')->group(function () {
+            Route::get('/avatar', [UserAvatarController::class, 'show'])->name('users.avatars.show');
+            Route::post('/avatar', [UserAvatarController::class, 'store'])->name('users.avatars.store');
+            Route::delete('/avatar', [UserAvatarController::class, 'destroy'])->name('users.avatars.destroy');
+        });
 
         // Текущий пользователь (без {user} в URL)
         Route::get('/user', [CurrentUserController::class, 'show'])->name('user.show');

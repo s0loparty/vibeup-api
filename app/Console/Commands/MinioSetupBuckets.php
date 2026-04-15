@@ -83,20 +83,16 @@ class MinioSetupBuckets extends Command
      */
     private function setPublicBucketPolicy(S3Client $client, string $bucket): void
     {
+        // Только GetObject - можно скачать по прямой ссылке
+        // ListBucket НЕ включён - нельзя листать все файлы
         $policy = json_encode([
             'Version' => '2012-10-17',
             'Statement' => [
                 [
                     'Effect' => 'Allow',
                     'Principal' => '*',
-                    'Action' => [
-                        's3:GetObject',
-                        's3:ListBucket',
-                    ],
-                    'Resource' => [
-                        "arn:aws:s3:::{$bucket}",
-                        "arn:aws:s3:::{$bucket}/*",
-                    ],
+                    'Action' => ['s3:GetObject'],
+                    'Resource' => ["arn:aws:s3:::{$bucket}/*"],
                 ],
             ],
         ]);

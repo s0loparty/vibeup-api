@@ -12,6 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\Image\Enums\Fit;
 
 #[ObservedBy([UserObserver::class])]
 class User extends Authenticatable implements HasMedia
@@ -91,16 +92,21 @@ class User extends Authenticatable implements HasMedia
 			->singleFile()
 			->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp'])
 			->registerMediaConversions(function () {
-				// Оптимизированная копия (сжатие + WebP)
 				$this->addMediaConversion('optimized')
+					->fit(Fit::Max, 512, 512)
 					->quality(85)
-					->format('webp');
+					->optimize()
+					->format('webp')
+					->nonQueued();
 
 				// Thumbnail 120x120
 				$this->addMediaConversion('thumbnail')
-					->width(120)
-					->height(120)
-					->format('webp');
+					->fit(Fit::Crop, 120, 120)
+					->quality(80)
+					->sharpen(10)
+					->optimize()
+					->format('webp')
+					->nonQueued();
 			});
 	}
 

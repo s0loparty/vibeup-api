@@ -242,7 +242,7 @@ class ChatController extends Controller
 			$chat->load(explode(',', $include));
 		}
 
-		return response()->json(['chat' => $chat]);
+		return response()->json(['chat' => new ChatResource($chat)]);
 	}
 
 	#[OA\Put(

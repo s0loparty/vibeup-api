@@ -17,8 +17,8 @@ class UserResource extends JsonResource
 		return [
 			'id' => $this->id,
 			'username' => $this->username,
-			'email' => $this->email,
 			'bio' => $this->bio,
+			'email' => $this->email,
 			'avatar' => $this->avatar, // 👈 аксессор отработает
 			'last_seen_at' => $this->last_seen_at,
 		];

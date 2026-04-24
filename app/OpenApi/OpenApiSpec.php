@@ -31,6 +31,7 @@ use OpenApi\Attributes as OA;
 					new OA\Property(property: 'last_seen_at', type: 'string', format: 'date-time', nullable: true),
 					new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
 					new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+					new OA\Property(property: 'avatar', ref: '#/components/schemas/AvatarResponse', nullable: true),
 				]
 			),
 
@@ -145,7 +146,6 @@ use OpenApi\Attributes as OA;
 				schema: 'AvatarResponse',
 				title: 'AvatarResponse',
 				description: 'Данные аватарки пользователя',
-				// required: ['original', 'thumbnail'],
 				properties: [
 					new OA\Property(property: 'original', type: 'string', format: 'uri', nullable: true, description: 'URL оригинальной аватарки', example: 'https://s3.example.com/avatars/avatar.jpg'),
 					new OA\Property(property: 'thumbnail', type: 'string', format: 'uri', nullable: true, description: 'URL thumbnail 78x78', example: 'https://s3.example.com/avatars/conversions/avatar-thumb.jpg'),

@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Data\Chat\CreateChatData;
 use App\Data\Chat\UpdateChatData;
-use App\Enums\ChatType;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Chat\ChatResource;
 use App\Http\Resources\CursorPaginatedResource;
 use App\Models\Chat;
-use App\Models\User;
 use App\Services\ChatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,7 +47,7 @@ class ChatController extends Controller
 			new OA\Parameter(
 				name: 'include',
 				in: 'query',
-				description: 'Включить связанные данные (creator). lastMessage загружается всегда',
+				description: 'Включить связанные данные (creator, members). lastMessage загружается всегда',
 				required: false,
 				schema: new OA\Schema(type: 'string')
 			),
@@ -83,7 +82,7 @@ class ChatController extends Controller
 
 		$query = QueryBuilder::for($user->chats())
 			->allowedFilters(['type'])
-			->allowedIncludes(['creator'])
+			->allowedIncludes(['creator', 'members'])
 			->allowedSorts([
 				AllowedSort::field('id'),
 				AllowedSort::field('created_at'),
@@ -93,9 +92,14 @@ class ChatController extends Controller
 
 		$query->with(['lastMessage']);
 
-		$paginator = $query->cursorPaginate(30);
+		$paginator       = $query->cursorPaginate(30);
+		$transformedData = ChatResource::collection($paginator->items());
 
-		return new CursorPaginatedResource($paginator);
+		// return new CursorPaginatedResource($paginator);
+		return new CursorPaginatedResource(
+			$paginator,
+			['data' => $transformedData]
+		);
 	}
 
 	#[OA\Post(

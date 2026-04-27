@@ -6,6 +6,7 @@ use App\Data\Chat\CreateChatData;
 use App\Data\Chat\UpdateChatData;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Chat\ChatResource;
+use App\Http\Resources\Chat\PublicChatResource;
 use App\Http\Resources\CursorPaginatedResource;
 use App\Models\Chat;
 use App\Services\ChatService;
@@ -19,8 +20,7 @@ class ChatController extends Controller
 {
 	public function __construct(
 		private ChatService $chatService,
-	) {
-	}
+	) {}
 
 	#[OA\Get(
 		path: '/api/v1/chats',
@@ -172,8 +172,8 @@ class ChatController extends Controller
 
 		return response()->json(
 			$result['exists'] ?? false
-			? ['message' => 'Чат с этим пользователем уже существует', 'chat' => $result['chat']]
-			: ['message' => 'Чат успешно создан', 'chat' => $result['chat']],
+				? ['message' => 'Чат с этим пользователем уже существует', 'chat' => $result['chat']]
+				: ['message' => 'Чат успешно создан', 'chat' => $result['chat']],
 			$result['status']
 		);
 	}
@@ -242,7 +242,7 @@ class ChatController extends Controller
 			$chat->load(explode(',', $include));
 		}
 
-		return response()->json(['chat' => new ChatResource($chat)]);
+		return response()->json(['chat' => new PublicChatResource($chat)]);
 	}
 
 	#[OA\Put(

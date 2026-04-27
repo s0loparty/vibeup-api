@@ -35,6 +35,21 @@ use OpenApi\Attributes as OA;
 				]
 			),
 
+			//Public User Schema
+			new OA\Schema(
+				schema: 'PublicUser',
+				title: 'PublicUser',
+				description: 'Пользователь приложения',
+				required: ['id', 'username'],
+				properties: [
+					new OA\Property(property: 'id', type: 'integer', example: 1),
+					new OA\Property(property: 'username', type: 'string', example: 'John Doe'),
+					new OA\Property(property: 'bio', type: 'string', nullable: true, example: 'Lorem ipsum dolor sit amet.'),
+					new OA\Property(property: 'last_seen_at', type: 'string', format: 'date-time', nullable: true),
+					new OA\Property(property: 'avatar', ref: '#/components/schemas/AvatarResponse', nullable: true),
+				]
+			),
+
 			// Auth Token Schema
 			new OA\Schema(
 				schema: 'AuthToken',
@@ -63,6 +78,25 @@ use OpenApi\Attributes as OA;
 					new OA\Property(property: 'last_message', ref: '#/components/schemas/Message', nullable: true),
 					new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
 					new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+				]
+			),
+
+			//Public Chat Schema
+			new OA\Schema(
+				schema: 'PublicChat',
+				title: 'PublicChat',
+				description: 'Чат',
+				required: ['id', 'type', 'created_by', 'display_title'],
+				properties: [
+					new OA\Property(property: 'id', type: 'integer', example: 1),
+					new OA\Property(property: 'type', type: 'string', enum: ['private', 'group'], example: 'private'),
+					new OA\Property(property: 'display_title', type: 'string', description: 'Отображаемый заголовок: для group — title, для private — username собеседника', example: 'john_doe'),
+					new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+					new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+					new OA\Property(property: 'created_by', type: 'integer', example: 1),
+					new OA\Property(property: 'last_message_id', type: 'integer', nullable: true),
+					new OA\Property(property: 'last_message', ref: '#/components/schemas/Message', nullable: true),
+					new OA\Property(property: 'members', type: 'array', description: 'Список участников чата', items: new OA\Items(ref: '#/components/schemas/PublicUser')),
 				]
 			),
 
@@ -198,7 +232,9 @@ use OpenApi\Attributes as OA;
 				required: ['message', 'errors'],
 				properties: [
 					new OA\Property(property: 'message', type: 'string', example: 'The email field is required. (and 1 more error)'),
-					new OA\Property(property: 'errors', type: 'object',
+					new OA\Property(
+						property: 'errors',
+						type: 'object',
 						additionalProperties: new OA\AdditionalProperties(
 							type: 'array',
 							items: new OA\Items(type: 'string')
@@ -227,6 +263,4 @@ use OpenApi\Attributes as OA;
 		new OA\Tag(name: 'Файлы чата', description: 'Загрузка и скачивание файлов в чатах'),
 	]
 )]
-class OpenApiSpec
-{
-}
+class OpenApiSpec {}

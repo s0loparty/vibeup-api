@@ -21,7 +21,7 @@ use OpenApi\Attributes as OA;
 				schema: 'User',
 				title: 'User',
 				description: 'Пользователь приложения',
-				required: ['id', 'username', 'email'],
+				required: ['id', 'username', 'email', 'last_seen_at', 'created_at', 'updated_at', 'email_verified_at'],
 				properties: [
 					new OA\Property(property: 'id', type: 'integer', example: 1),
 					new OA\Property(property: 'username', type: 'string', example: 'John Doe'),
@@ -40,7 +40,7 @@ use OpenApi\Attributes as OA;
 				schema: 'PublicUser',
 				title: 'PublicUser',
 				description: 'Пользователь приложения',
-				required: ['id', 'username'],
+				required: ['id', 'username', 'last_seen_at'],
 				properties: [
 					new OA\Property(property: 'id', type: 'integer', example: 1),
 					new OA\Property(property: 'username', type: 'string', example: 'John Doe'),
@@ -75,7 +75,7 @@ use OpenApi\Attributes as OA;
 					new OA\Property(property: 'created_by', type: 'integer', example: 1),
 					new OA\Property(property: 'last_message_id', type: 'integer', nullable: true),
 					new OA\Property(property: 'display_title', type: 'string', description: 'Отображаемый заголовок: для group — title, для private — username собеседника', example: 'john_doe'),
-					new OA\Property(property: 'last_message', ref: '#/components/schemas/Message', nullable: true),
+					new OA\Property(property: 'last_message', ref: '#/components/schemas/PublicMessage', nullable: true),
 					new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
 					new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
 				]
@@ -86,7 +86,7 @@ use OpenApi\Attributes as OA;
 				schema: 'PublicChat',
 				title: 'PublicChat',
 				description: 'Чат',
-				required: ['id', 'type', 'created_by', 'display_title'],
+				required: ['id', 'type', 'created_by', 'display_title', 'members', 'created_at', 'updated_at'],
 				properties: [
 					new OA\Property(property: 'id', type: 'integer', example: 1),
 					new OA\Property(property: 'type', type: 'string', enum: ['private', 'group'], example: 'private'),
@@ -95,7 +95,7 @@ use OpenApi\Attributes as OA;
 					new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
 					new OA\Property(property: 'created_by', type: 'integer', example: 1),
 					new OA\Property(property: 'last_message_id', type: 'integer', nullable: true),
-					new OA\Property(property: 'last_message', ref: '#/components/schemas/Message', nullable: true),
+					new OA\Property(property: 'last_message', ref: '#/components/schemas/PublicMessage', nullable: true),
 					new OA\Property(property: 'members', type: 'array', description: 'Список участников чата', items: new OA\Items(ref: '#/components/schemas/PublicUser')),
 				]
 			),
@@ -113,7 +113,7 @@ use OpenApi\Attributes as OA;
 					new OA\Property(property: 'last_read_message_id', type: 'integer', nullable: true),
 					new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
 					new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
-					new OA\Property(property: 'user', ref: '#/components/schemas/User', nullable: true),
+					new OA\Property(property: 'user', ref: '#/components/schemas/PublicUser', nullable: true),
 				]
 			),
 
@@ -122,7 +122,7 @@ use OpenApi\Attributes as OA;
 				schema: 'Message',
 				title: 'Message',
 				description: 'Сообщение в чате',
-				required: ['id', 'chat_id', 'sender_id', 'type', 'body'],
+				required: ['id', 'chat_id', 'sender_id', 'type', 'body', 'created_at', 'updated_at', 'edited_at'],
 				properties: [
 					new OA\Property(property: 'id', type: 'integer', example: 1),
 					new OA\Property(property: 'chat_id', type: 'integer', example: 1),
@@ -133,8 +133,29 @@ use OpenApi\Attributes as OA;
 					new OA\Property(property: 'edited_at', type: 'string', format: 'date-time', nullable: true),
 					new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
 					new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
-					new OA\Property(property: 'sender', ref: '#/components/schemas/User', nullable: true),
-					new OA\Property(property: 'reply_to', ref: '#/components/schemas/Message', nullable: true),
+					new OA\Property(property: 'sender', ref: '#/components/schemas/PublicUser', nullable: true),
+					new OA\Property(property: 'reply_to', ref: '#/components/schemas/PublicMessage', nullable: true),
+				]
+			),
+
+			//Public Message Schema
+			new OA\Schema(
+				schema: 'PublicMessage',
+				title: 'PublicMessage',
+				description: 'Сообщение в чате',
+				required: ['id', 'chat_id', 'sender_id', 'type', 'body', 'created_at', 'updated_at', 'edited_at'],
+				properties: [
+					new OA\Property(property: 'id', type: 'integer', example: 1),
+					new OA\Property(property: 'chat_id', type: 'integer', example: 1),
+					new OA\Property(property: 'sender_id', type: 'integer', example: 1),
+					new OA\Property(property: 'type', type: 'string', enum: ['text', 'image', 'video', 'audio', 'file'], example: 'text'),
+					new OA\Property(property: 'body', type: 'string', example: 'Привет, как дела?'),
+					new OA\Property(property: 'reply_to_id', type: 'integer', nullable: true),
+					new OA\Property(property: 'edited_at', type: 'string', format: 'date-time', nullable: true),
+					new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+					new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+					new OA\Property(property: 'sender', ref: '#/components/schemas/PublicUser', nullable: true),
+					new OA\Property(property: 'reply_to', ref: '#/components/schemas/PublicMessage', nullable: true),
 				]
 			),
 
@@ -159,7 +180,7 @@ use OpenApi\Attributes as OA;
 				title: 'PaginatedChatsResponse',
 				description: 'Пагинированный список чатов',
 				properties: [
-					new OA\Property(property: 'data', type: 'array', description: 'Массив чатов', items: new OA\Items(ref: '#/components/schemas/Chat')),
+					new OA\Property(property: 'data', type: 'array', description: 'Массив чатов', items: new OA\Items(ref: '#/components/schemas/PublicChat')),
 					new OA\Property(property: 'meta', ref: '#/components/schemas/CursorPaginationMeta'),
 				]
 			),
@@ -170,7 +191,7 @@ use OpenApi\Attributes as OA;
 				title: 'PaginatedMessagesResponse',
 				description: 'Пагинированный список сообщений',
 				properties: [
-					new OA\Property(property: 'data', type: 'array', description: 'Массив сообщений', items: new OA\Items(ref: '#/components/schemas/Message')),
+					new OA\Property(property: 'data', type: 'array', description: 'Массив сообщений', items: new OA\Items(ref: '#/components/schemas/PublicMessage')),
 					new OA\Property(property: 'meta', ref: '#/components/schemas/CursorPaginationMeta'),
 				]
 			),
@@ -191,7 +212,7 @@ use OpenApi\Attributes as OA;
 				schema: 'ChatFileResponse',
 				title: 'ChatFileResponse',
 				description: 'Данные файла в чате',
-				required: ['id', 'original_name', 'mime_type', 'size'],
+				required: ['id', 'original_name', 'mime_type', 'size', 'created_at'],
 				properties: [
 					new OA\Property(property: 'id', type: 'integer', example: 1),
 					new OA\Property(property: 'original_name', type: 'string', example: 'document.pdf'),

@@ -127,7 +127,7 @@ class ChatController extends Controller
 				content: new OA\JsonContent(
 					properties: [
 						new OA\Property(property: 'message', type: 'string', example: 'Чат успешно создан'),
-						new OA\Property(property: 'chat', ref: '#/components/schemas/Chat'),
+						new OA\Property(property: 'chat', ref: '#/components/schemas/PublicChat'),
 					]
 				)
 			),
@@ -137,7 +137,7 @@ class ChatController extends Controller
 				content: new OA\JsonContent(
 					properties: [
 						new OA\Property(property: 'message', type: 'string', example: 'Чат с этим пользователем уже существует'),
-						new OA\Property(property: 'chat', ref: '#/components/schemas/Chat'),
+						new OA\Property(property: 'chat', ref: '#/components/schemas/PublicChat'),
 					]
 				)
 			),
@@ -160,7 +160,7 @@ class ChatController extends Controller
 	public function store(Request $request, CreateChatData $data): JsonResponse
 	{
 		$user   = $request->user();
-		$result = $this->chatService->createChat($user, $data);
+		$result = new PublicChatResource($this->chatService->createChat($user, $data));
 
 		// Если ошибка валидации или пользователь не найден
 		if (! ($result['success'] ?? true)) {
@@ -207,7 +207,7 @@ class ChatController extends Controller
 				description: 'Данные чата',
 				content: new OA\JsonContent(
 					properties: [
-						new OA\Property(property: 'chat', ref: '#/components/schemas/Chat'),
+						new OA\Property(property: 'chat', ref: '#/components/schemas/PublicChat'),
 					]
 				)
 			),
@@ -275,7 +275,7 @@ class ChatController extends Controller
 				content: new OA\JsonContent(
 					properties: [
 						new OA\Property(property: 'message', type: 'string', example: 'Чат успешно обновлён'),
-						new OA\Property(property: 'chat', ref: '#/components/schemas/Chat'),
+						new OA\Property(property: 'chat', ref: '#/components/schemas/PublicChat'),
 					]
 				)
 			),
@@ -302,7 +302,7 @@ class ChatController extends Controller
 	public function update(Request $request, Chat $chat, UpdateChatData $data): JsonResponse
 	{
 		$user   = $request->user();
-		$result = $this->chatService->updateChat($chat, $user, $data);
+		$result = new PublicChatResource($this->chatService->updateChat($chat, $user, $data));
 
 		if (! $result['success']) {
 			return response()->json(['message' => $result['error']], $result['status']);
@@ -355,7 +355,7 @@ class ChatController extends Controller
 	public function destroy(Request $request, Chat $chat): JsonResponse
 	{
 		$user   = $request->user();
-		$result = $this->chatService->deleteChat($chat, $user);
+		$result = new PublicChatResource($this->chatService->deleteChat($chat, $user));
 
 		if (! $result['success']) {
 			return response()->json(['message' => $result['error']], $result['status']);

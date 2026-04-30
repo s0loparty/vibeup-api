@@ -20,8 +20,8 @@ class MessageResource extends JsonResource
 			'body' => $this->body,
 			'updated_at' => $this->updated_at,
 			'created_at' => $this->created_at,
-			'reply_to' => new MessageResource($this->whenLoaded('reply_to')),
-			'sender' => new MessageResource($this->whenLoaded('sender')),
+			'reply_to' => new PublicMessageResource($this->whenLoaded('reply_to')),
+			'sender' => new PublicMessageResource($this->whenLoaded('sender')),
 		];
 	}
 }

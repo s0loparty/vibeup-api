@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Chat;
 
 use App\Http\Resources\Message\MessageResource;
+use App\Http\Resources\Message\PublicMessageResource;
 use App\Http\Resources\User\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -28,7 +29,7 @@ class ChatResource extends JsonResource
 			// 'members' => $this->whenLoaded('members', fn () => UserResource::collection($this->members)),
 			'members' => UserResource::collection($this->whenLoaded('members')),
 			'creator' => new UserResource($this->whenLoaded('creator')),
-			'last_message' => new MessageResource($this->whenLoaded('lastMessage')),
+			'last_message' => new PublicMessageResource($this->whenLoaded('lastMessage')),
 		];
 	}
 }

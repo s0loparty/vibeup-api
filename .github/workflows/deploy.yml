@@ -1,0 +1,96 @@
+name: Build and Deploy to VPS
+
+on:
+  push:
+    branches: [ devstage ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/app
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/app/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code (только для получения compose файлов)
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.yml and configs to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "docker-compose.yml,docker/nginx,docker/traefik"
+          target: ${{ secrets.VPS_PATH }}
+          strip_components: 0
+
+      - name: Deploy on VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.VPS_PATH }}
+
+            # 1. Обновить .env (создать из секрета)
+            echo "${{ secrets.ENV_PRODUCTION }}" > .env
+
+            # 2. Установить переменную IMAGE_TAG в .env
+            echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> .env
+
+            # 3. Войти в GitHub Container Registry (если не вошли)
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 4. Скачать новый образ
+            docker compose pull app horizon reverb
+
+            # 5. Пересоздать контейнеры (без даунтайма? – используем up -d)
+            docker compose up -d --remove-orphans
+
+            # 6. Выполнить миграции и кэширование
+            docker compose exec -T app php artisan migrate --force
+            docker compose exec -T app php artisan config:cache
+            docker compose exec -T app php artisan route:cache
+            docker compose exec -T app php artisan view:cache
+
+            # 7. Перезапустить Horizon и Reverb (чтобы гарантированно взять новый код)
+            docker compose restart horizon reverb
+
+            # 8. Очистить старые образы (опционально)
+            docker image prune -f

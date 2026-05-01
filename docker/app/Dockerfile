@@ -36,12 +36,18 @@ COPY . .
 # Теперь запускаем скрипты composer (post-autoload-dump, который вызывает package:discover и т.п.)
 RUN composer run-script post-autoload-dump
 
-# Права на storage и bootstrap/cache
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+# Копируем скрипт entrypoint и даём права
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# Меняем владельца всех файлов в образе на www-data
+RUN chown -R www-data:www-data /var/www/html
+
+# Переключаемся на пользователя www-data
 USER www-data
 
 EXPOSE 9000
 
+# Используем наш entrypoint, который поправит права при запуске
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]

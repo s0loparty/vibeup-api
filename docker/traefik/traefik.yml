@@ -13,10 +13,6 @@ entryPoints:
   websecure:
     address: ":443"
 
-experimental:
-  kubernetesGateway:
-    enabled: false
-
 providers:
   file:
     filename: /dynamic.yml

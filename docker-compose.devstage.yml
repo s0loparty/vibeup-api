@@ -106,7 +106,7 @@ services:
       AWS_USE_PATH_STYLE_ENDPOINT: true
     volumes:
       - app-storage:/var/www/html/storage
-      - ./.env:/var/www/html/.env:ro
+      - ./.env:/var/www/html/.env
       - ./public/uploads:/var/www/html/public/uploads
     networks:
       - internal
@@ -155,7 +155,7 @@ services:
       REDIS_PORT: 6379
     volumes:
       - app-storage:/var/www/html/storage
-      - ./.env:/var/www/html/.env:ro
+      - ./.env:/var/www/html/.env
     networks:
       - internal
     depends_on:
@@ -188,7 +188,7 @@ services:
       REVERB_SCHEME: https
     volumes:
       - app-storage:/var/www/html/storage
-      - ./.env:/var/www/html/.env:ro
+      - ./.env:/var/www/html/.env
     networks:
       - internal
       - traefik

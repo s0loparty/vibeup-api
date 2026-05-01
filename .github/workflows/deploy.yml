@@ -84,10 +84,20 @@ jobs:
             docker compose -f docker-compose.devstage.yml up -d --remove-orphans
 
             # Автоматическая настройка прав и ключа
-            sleep 10
+            # Ждём, пока контейнер app запустится
+            for i in {1..30}; do
+              if docker compose -f docker-compose.devstage.yml exec -T app php artisan --version >/dev/null 2>&1; then
+                break
+              fi
+              echo "Waiting for app container..."
+              sleep 2
+            done
+
             docker compose -f docker-compose.devstage.yml exec -u root app chown www-data:www-data .env
             # 6. Выполнить миграции и кэширование
+            docker compose -f docker-compose.devstage.yml exec -T app php artisan key:generate --force
             docker compose -f docker-compose.devstage.yml exec -T app php artisan migrate --force
+
             docker compose -f docker-compose.devstage.yml exec -T app php artisan config:cache
             docker compose -f docker-compose.devstage.yml exec -T app php artisan route:cache
             docker compose -f docker-compose.devstage.yml exec -T app php artisan view:cache

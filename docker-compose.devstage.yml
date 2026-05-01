@@ -105,7 +105,7 @@ services:
       AWS_BUCKET: ${MINIO_BUCKET}
       AWS_USE_PATH_STYLE_ENDPOINT: true
     volumes:
-      - ./storage:/var/www/html/storage
+      - app-storage:/var/www/html/storage
       - ./.env:/var/www/html/.env:ro
       - ./public/uploads:/var/www/html/public/uploads
     networks:
@@ -154,7 +154,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     volumes:
-      - ./storage:/var/www/html/storage
+      - app-storage:/var/www/html/storage
       - ./.env:/var/www/html/.env:ro
     networks:
       - internal
@@ -187,7 +187,7 @@ services:
       REVERB_PORT: 443
       REVERB_SCHEME: https
     volumes:
-      - ./storage:/var/www/html/storage
+      - app-storage:/var/www/html/storage
       - ./.env:/var/www/html/.env:ro
     networks:
       - internal

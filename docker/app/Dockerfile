@@ -11,7 +11,7 @@ RUN apk add --no-cache \
         nginx \
         nodejs \
         npm \
-    && docker-php-ext-install pdo_pgsql mbstring zip \
+    && docker-php-ext-install pdo_pgsql mbstring zip exif \
     && apk add --no-cache --virtual .build-deps autoconf build-base \
     && pecl install redis && docker-php-ext-enable redis \
     && apk del .build-deps

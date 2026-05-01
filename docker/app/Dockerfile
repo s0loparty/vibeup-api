@@ -37,7 +37,7 @@ COPY . .
 RUN composer run-script post-autoload-dump
 
 # Копируем скрипт entrypoint и даём права
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY ./docker/app/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Меняем владельца всех файлов в образе на www-data

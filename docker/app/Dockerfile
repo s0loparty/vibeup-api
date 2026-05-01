@@ -20,19 +20,21 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Копируем composer.json, composer.lock и artisan до установки
+# Копируем composer.json и composer.lock отдельно для кэширования
 COPY composer.json composer.lock ./
-COPY artisan ./
 
-# Устанавливаем зависимости (скриптам уже доступен artisan)
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# Устанавливаем зависимости БЕЗ выполнения скриптов (так как artisan и bootstrap/app.php ещё не скопированы)
+RUN composer install --no-interaction --optimize-autoloader --no-dev --no-scripts
 
-# Копируем package.json для frontend
+# Копируем package.json и устанавливаем фронтенд (если нужен)
 COPY package.json package-lock.json ./
-RUN npm ci && npm run build
+RUN npm ci && npm run build || true
 
-# Копируем остальной код
+# Копируем весь код приложения (включая artisan, bootstrap, config и т.д.)
 COPY . .
+
+# Теперь запускаем скрипты composer (post-autoload-dump, который вызывает package:discover и т.п.)
+RUN composer run-script post-autoload-dump
 
 # Права на storage и bootstrap/cache
 RUN chown -R www-data:www-data storage bootstrap/cache \

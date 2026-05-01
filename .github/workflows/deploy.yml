@@ -83,6 +83,9 @@ jobs:
             # 5. Пересоздать контейнеры (без даунтайма? – используем up -d)
             docker compose -f docker-compose.devstage.yml up -d --remove-orphans
 
+            # Автоматическая настройка прав и ключа
+            sleep 10
+            docker compose -f docker-compose.devstage.yml exec -u root app chown www-data:www-data .env
             # 6. Выполнить миграции и кэширование
             docker compose -f docker-compose.devstage.yml exec -T app php artisan migrate --force
             docker compose -f docker-compose.devstage.yml exec -T app php artisan config:cache

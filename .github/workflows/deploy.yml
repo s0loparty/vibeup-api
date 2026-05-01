@@ -49,13 +49,13 @@ jobs:
       - name: Checkout code (только для получения compose файлов)
         uses: actions/checkout@v4
 
-      - name: Copy docker-compose.yml and configs to VPS
+      - name: Copy docker-compose.devstage.yml and configs to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker-compose.yml,docker/nginx,docker/traefik"
+          source: "docker-compose.devstage.yml,docker/nginx,docker/traefik"
           target: ${{ secrets.VPS_PATH }}
           strip_components: 0
 
@@ -78,19 +78,19 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # 4. Скачать новый образ
-            docker compose pull app horizon reverb
+            docker compose -f docker-compose.devstage.yml pull app horizon reverb
 
             # 5. Пересоздать контейнеры (без даунтайма? – используем up -d)
-            docker compose up -d --remove-orphans
+            docker compose -f docker-compose.devstage.yml up -d --remove-orphans
 
             # 6. Выполнить миграции и кэширование
-            docker compose exec -T app php artisan migrate --force
-            docker compose exec -T app php artisan config:cache
-            docker compose exec -T app php artisan route:cache
-            docker compose exec -T app php artisan view:cache
+            docker compose -f docker-compose.devstage.yml exec -T app php artisan migrate --force
+            docker compose -f docker-compose.devstage.yml exec -T app php artisan config:cache
+            docker compose -f docker-compose.devstage.yml exec -T app php artisan route:cache
+            docker compose -f docker-compose.devstage.yml exec -T app php artisan view:cache
 
             # 7. Перезапустить Horizon и Reverb (чтобы гарантированно взять новый код)
-            docker compose restart horizon reverb
+            docker compose -f docker-compose.devstage.yml restart horizon reverb
 
             # 8. Очистить старые образы (опционально)
             docker image prune -f

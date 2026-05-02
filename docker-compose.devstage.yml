@@ -197,10 +197,11 @@ services:
       - app
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.reverb.rule=Host(`msg.playerinlife.ru`) && Headers(`Upgrade`, `websocket`)'
-      - 'traefik.http.routers.reverb.entrypoints=websecure'
-      - 'traefik.http.routers.reverb.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.reverb.rule=Host(`msg.playerinlife.ru`)'
       - 'traefik.http.services.reverb.loadbalancer.server.port=8080'
+      - 'traefik.http.middlewares.reverb-websocket.headers.customrequestheaders.Upgrade=websocket'
+      - 'traefik.http.middlewares.reverb-websocket.headers.customrequestheaders.Connection=Upgrade'
+      - 'traefik.http.routers.reverb.middlewares=reverb-websocket'
 
 networks:
   traefik:

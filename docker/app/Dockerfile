@@ -16,6 +16,8 @@ RUN apk add --no-cache \
     && pecl install redis && docker-php-ext-enable redis \
     && apk del .build-deps
 
+COPY ./docker/app/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html

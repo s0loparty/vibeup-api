@@ -203,6 +203,7 @@ services:
       - 'traefik.http.middlewares.reverb-websocket.headers.customrequestheaders.Upgrade=websocket'
       - 'traefik.http.middlewares.reverb-websocket.headers.customrequestheaders.Connection=Upgrade'
       - 'traefik.http.routers.reverb.middlewares=reverb-websocket'
+      - 'traefik.docker.network=vibeup_traefik'
 
 networks:
   traefik:

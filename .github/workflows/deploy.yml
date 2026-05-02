@@ -68,8 +68,10 @@ jobs:
           script: |
             cd ${{ secrets.VPS_PATH }}
 
-            # 1. Обновить .env (создать из секрета)
-            echo "${{ secrets.ENV_PRODUCTION }}" > .env
+            # 1. Обновить .env (создать из секрета) – используем heredoc с кавычками, чтобы $ не интерпретировались
+            cat > .env << 'EOF'
+            ${{ secrets.ENV_PRODUCTION }}
+            EOF
 
             # 2. Установить переменную IMAGE_TAG в .env
             echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> .env

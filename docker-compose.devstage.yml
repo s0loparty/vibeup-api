@@ -64,7 +64,15 @@ services:
       - minio_data:/data
     networks:
       - internal
+      - traefik
     command: server /data --console-address ":9001"
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.minio.rule=Host(`msg-s3.playerinlife.ru`)'
+      - 'traefik.http.routers.minio.entrypoints=websecure'
+      - 'traefik.http.routers.minio.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.minio.loadbalancer.server.port=9001'
+      - 'traefik.docker.network=vibeup_traefik'
     healthcheck:
       test: ['CMD', 'mc', 'ready', 'local']
       interval: 30s

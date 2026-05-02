@@ -135,6 +135,13 @@ services:
       - 'traefik.http.routers.laravel.tls.certresolver=letsencrypt'
       - 'traefik.http.services.laravel.loadbalancer.server.port=80'
       - 'traefik.docker.network=vibeup_traefik'
+      # ниже настройка base auth для /horizon
+      - 'traefik.http.routers.horizon.rule=Host(`msg.playerinlife.ru`) && PathPrefix(`/horizon`)'
+      - 'traefik.http.routers.horizon.entrypoints=websecure'
+      - 'traefik.http.routers.horizon.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.horizon.middlewares=horizon-auth'
+      - 'traefik.http.middlewares.horizon-auth.basicauth.users=${HORIZON_AUTH_USERS}'
+      - 'traefik.http.services.horizon.loadbalancer.server.port=80'
 
   # ----------------------- Laravel Horizon (Очереди) -----------------------
   horizon:

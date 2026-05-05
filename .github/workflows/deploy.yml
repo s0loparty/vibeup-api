@@ -21,6 +21,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ✅ Устанавливаем PHP 8.4 (соответствует вашему Dockerfile)
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer
+
       - name: Generate cache keys
         id: cache_keys
         run: |
@@ -55,7 +62,7 @@ jobs:
       - name: Build frontend (Vite)
         run: npm run build
         env:
-          VITE_APP_URL: https://msg.playerinlife.ru   # замените на ваш домен
+          VITE_APP_URL: https://msg.playerinlife.ru
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3

@@ -1,5 +1,4 @@
 services:
-  # ----------------------- Traefik Reverse Proxy -----------------------
   traefik:
     image: traefik:3.6
     container_name: traefik
@@ -17,7 +16,6 @@ services:
     command:
       - '--configFile=/traefik.yml'
 
-  # ----------------------- PostgreSQL -----------------------
   postgres:
     image: postgres:17-alpine
     container_name: postgres
@@ -36,7 +34,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # ----------------------- Redis -----------------------
   redis:
     image: redis:alpine
     container_name: redis
@@ -52,7 +49,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # ----------------------- Minio (S3) -----------------------
   minio:
     image: minio/minio:latest
     container_name: minio
@@ -72,14 +68,13 @@ services:
       - 'traefik.http.routers.minio.entrypoints=websecure'
       - 'traefik.http.routers.minio.tls.certresolver=letsencrypt'
       - 'traefik.http.services.minio.loadbalancer.server.port=9001'
-      - 'traefik.docker.network=vibeup_traefik'
+      - 'traefik.docker.network=traefik'
     healthcheck:
       test: ['CMD', 'mc', 'ready', 'local']
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # ----------------------- Laravel Application (PHP-FPM) -----------------------
   app:
     image: ghcr.io/s0loparty/vibeup-api/app:${IMAGE_TAG:-latest}
     pull_policy: always
@@ -96,22 +91,22 @@ services:
     volumes:
       - app-storage:/var/www/html/storage
       - ./.env:/var/www/html/.env
-      - ./public/uploads:/var/www/html/public/uploads
     networks:
       - internal
     depends_on:
-      - postgres
-      - redis
-      - minio
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
 
-  # ----------------------- Nginx Webserver -----------------------
   webserver:
-    image: nginx:alpine
+    image: ghcr.io/s0loparty/vibeup-api/webserver:${IMAGE_TAG:-latest}
     container_name: webserver
     restart: always
     volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./public:/var/www/html/public:ro
+      - app-storage:/var/www/html/storage:ro
     networks:
       - internal
       - traefik
@@ -119,15 +114,13 @@ services:
       - app
     labels:
       - 'traefik.enable=true'
-      - 'traefik.docker.network=vibeup_traefik'
-
-      # --- Основной роутер (без авторизации) ---
+      - 'traefik.docker.network=traefik'
       - 'traefik.http.routers.laravel.rule=Host(`msg.playerinlife.ru`)'
       - 'traefik.http.routers.laravel.entrypoints=websecure'
       - 'traefik.http.routers.laravel.tls.certresolver=letsencrypt'
       - 'traefik.http.services.laravel.loadbalancer.server.port=80'
 
-      # --- Роутер для Horizon (с Basic Auth) ---
+      # base auth for Horizon
       - 'traefik.http.routers.horizon.rule=Host(`msg.playerinlife.ru`) && PathPrefix(`/horizon`)'
       - 'traefik.http.routers.horizon.entrypoints=websecure'
       - 'traefik.http.routers.horizon.tls.certresolver=letsencrypt'
@@ -135,7 +128,6 @@ services:
       - 'traefik.http.routers.horizon.service=laravel'
       - 'traefik.http.middlewares.horizon-auth.basicauth.users=${HORIZON_AUTH_USERS}'
 
-  # ----------------------- Laravel Horizon (Очереди) -----------------------
   horizon:
     image: ghcr.io/s0loparty/vibeup-api/app:${IMAGE_TAG:-latest}
     pull_policy: always
@@ -162,7 +154,6 @@ services:
       - redis
       - app
 
-  # ----------------------- Laravel Reverb (WebSocket) -----------------------
   reverb:
     image: ghcr.io/s0loparty/vibeup-api/app:${IMAGE_TAG:-latest}
     pull_policy: always
@@ -202,13 +193,13 @@ services:
       - 'traefik.http.middlewares.reverb-websocket.headers.customrequestheaders.Upgrade=websocket'
       - 'traefik.http.middlewares.reverb-websocket.headers.customrequestheaders.Connection=Upgrade'
       - 'traefik.http.routers.reverb.middlewares=reverb-websocket'
-      - 'traefik.docker.network=vibeup_traefik'
+      - 'traefik.docker.network=traefik'
 
 networks:
   traefik:
-    external: false
+    driver: bridge
   internal:
-    external: false
+    driver: bridge
 
 volumes:
   postgres_data:
@@ -216,4 +207,3 @@ volumes:
   minio_data:
   app-storage:
   traefik_certs:
-    external: false

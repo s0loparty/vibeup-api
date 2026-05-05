@@ -1,4 +1,4 @@
-name: Build and Deploy to VPS
+name: Build and Deploy to VPS (improved)
 
 on:
   push:
@@ -6,7 +6,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/app
+  IMAGE_NAME_APP: ${{ github.repository }}/app
+  IMAGE_NAME_WEB: ${{ github.repository }}/webserver
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -20,8 +21,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Generate cache keys
+        id: cache_keys
+        run: |
+          echo "COMPOSER_HASH=${{ hashFiles('composer.lock') }}" >> $GITHUB_OUTPUT
+          echo "NPM_HASH=${{ hashFiles('package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ steps.cache_keys.outputs.COMPOSER_HASH }}
+          restore-keys: composer-
+
+      - name: Cache Node modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: npm-${{ steps.cache_keys.outputs.NPM_HASH }}
+          restore-keys: npm-
+
+      - name: Install Composer dependencies
+        run: |
+          composer install \
+            --no-dev \
+            --optimize-autoloader \
+            --no-interaction \
+            --no-progress
+
+      - name: Install Node dependencies
+        run: npm ci --prefer-offline
+
+      - name: Build frontend (Vite)
+        run: npm run build
+        env:
+          VITE_APP_URL: https://msg.playerinlife.ru   # замените на ваш домен
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -30,15 +64,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push app image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: docker/app/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_APP }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_APP }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push webserver image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/nginx/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_WEB }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_WEB }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -46,7 +95,7 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code (только для получения compose файлов)
+      - name: Checkout code (for compose files)
         uses: actions/checkout@v4
 
       - name: Copy docker-compose.devstage.yml and configs to VPS
@@ -58,6 +107,7 @@ jobs:
           source: "docker-compose.devstage.yml,docker/nginx,docker/traefik"
           target: ${{ secrets.VPS_PATH }}
           strip_components: 0
+          overwrite: true
 
       - name: Deploy on VPS via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -68,43 +118,31 @@ jobs:
           script: |
             cd ${{ secrets.VPS_PATH }}
 
-            # 1. Обновить .env (создать из секрета) – используем heredoc с кавычками, чтобы $ не интерпретировались
             cat > .env << 'EOF'
             ${{ secrets.ENV_PRODUCTION }}
             EOF
 
-            # 2. Установить переменную IMAGE_TAG в .env
             echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> .env
 
-            # 3. Войти в GitHub Container Registry (если не вошли)
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # 4. Скачать новый образ
-            docker compose -f docker-compose.devstage.yml pull app horizon reverb
+            docker compose -f docker-compose.devstage.yml pull
 
-            # 5. Пересоздать контейнеры (без даунтайма? – используем up -d)
             docker compose -f docker-compose.devstage.yml up -d --remove-orphans
 
-            # Автоматическая настройка прав и ключа
-            # Ждём, пока контейнер app запустится
+            echo "Waiting for app container..."
             for i in {1..30}; do
               if docker compose -f docker-compose.devstage.yml exec -T app php artisan --version >/dev/null 2>&1; then
                 break
               fi
-              echo "Waiting for app container..."
               sleep 2
             done
 
-            docker compose -f docker-compose.devstage.yml exec -u root app chown www-data:www-data .env
-            # 6. Выполнить миграции и кэширование
             docker compose -f docker-compose.devstage.yml exec -T app php artisan migrate --force
+            docker compose -f docker-compose.devstage.yml exec -T app php artisan optimize
 
-            docker compose -f docker-compose.devstage.yml exec -T app php artisan config:cache
-            docker compose -f docker-compose.devstage.yml exec -T app php artisan route:cache
-            docker compose -f docker-compose.devstage.yml exec -T app php artisan view:cache
-
-            # 7. Перезапустить Horizon и Reverb (чтобы гарантированно взять новый код)
             docker compose -f docker-compose.devstage.yml restart horizon reverb
 
-            # 8. Очистить старые образы (опционально)
             docker image prune -f
+
+            echo "✅ Deployment completed successfully!"

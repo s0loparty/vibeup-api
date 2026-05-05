@@ -4,8 +4,7 @@ api:
 entryPoints:
   web:
     address: ":80"
-    # закомментить редирект для получения ssl сертификата
-		# http:
+    # http:
     #   redirections:
     #     entryPoint:
     #       to: websecure

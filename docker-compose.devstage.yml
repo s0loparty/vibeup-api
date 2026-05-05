@@ -116,13 +116,13 @@ services:
       - 'traefik.enable=true'
       - 'traefik.docker.network=traefik'
       - 'traefik.http.routers.laravel.rule=Host(`msg.playerinlife.ru`)'
-      - 'traefik.http.routers.laravel.entrypoints=websecure'
+      - 'traefik.http.routers.laravel.entrypoints=web'
       - 'traefik.http.routers.laravel.tls.certresolver=letsencrypt'
       - 'traefik.http.services.laravel.loadbalancer.server.port=80'
 
       # base auth for Horizon
       - 'traefik.http.routers.horizon.rule=Host(`msg.playerinlife.ru`) && PathPrefix(`/horizon`)'
-      - 'traefik.http.routers.horizon.entrypoints=websecure'
+      - 'traefik.http.routers.horizon.entrypoints=web'
       - 'traefik.http.routers.horizon.tls.certresolver=letsencrypt'
       - 'traefik.http.routers.horizon.middlewares=horizon-auth'
       - 'traefik.http.routers.horizon.service=laravel'

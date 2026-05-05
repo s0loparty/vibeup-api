@@ -65,8 +65,9 @@ services:
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.minio.rule=Host(`msg-s3.playerinlife.ru`)'
-      - 'traefik.http.routers.minio.entrypoints=websecure'
-      - 'traefik.http.routers.minio.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.minio.entrypoints=web'
+      # - 'traefik.http.routers.minio.entrypoints=websecure'
+      # - 'traefik.http.routers.minio.tls.certresolver=letsencrypt'
       - 'traefik.http.services.minio.loadbalancer.server.port=9001'
       - 'traefik.docker.network=traefik'
     healthcheck:
@@ -117,11 +118,13 @@ services:
       - 'traefik.docker.network=traefik'
       - 'traefik.http.routers.laravel.rule=Host(`msg.playerinlife.ru`)'
       - 'traefik.http.routers.laravel.entrypoints=web'
-      - 'traefik.http.routers.laravel.tls.certresolver=letsencrypt'
+      # - 'traefik.http.routers.laravel.entrypoints=websecure'
+      # - 'traefik.http.routers.laravel.tls.certresolver=letsencrypt'
       - 'traefik.http.services.laravel.loadbalancer.server.port=80'
 
       # base auth for Horizon
       - 'traefik.http.routers.horizon.rule=Host(`msg.playerinlife.ru`) && PathPrefix(`/horizon`)'
+      # - 'traefik.http.routers.horizon.entrypoints=websecure'
       - 'traefik.http.routers.horizon.entrypoints=web'
       - 'traefik.http.routers.horizon.tls.certresolver=letsencrypt'
       - 'traefik.http.routers.horizon.middlewares=horizon-auth'

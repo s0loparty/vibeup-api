@@ -36,12 +36,7 @@ class UserAvatarController extends Controller
 			new OA\Response(
 				response: 200,
 				description: 'Данные аватарки',
-				content: new OA\JsonContent(
-					properties: [
-						new OA\Property(property: 'original', type: 'string', nullable: true, example: 'https://minio.example.com/bucket/1/avatar.jpg'),
-						new OA\Property(property: 'thumbnail', type: 'string', nullable: true, example: 'https://minio.example.com/bucket/1/avatar_thumb.webp'),
-					]
-				)
+				content: new OA\JsonContent(ref: '#/components/schemas/AvatarResponse')
 			),
 			new OA\Response(
 				response: 404,
@@ -94,12 +89,7 @@ class UserAvatarController extends Controller
 			new OA\Response(
 				response: 200,
 				description: 'Аватарка загружена',
-				content: new OA\JsonContent(
-					properties: [
-						new OA\Property(property: 'original', type: 'string', example: 'https://minio.example.com/bucket/1/avatar.jpg'),
-						new OA\Property(property: 'thumbnail', type: 'string', example: 'https://minio.example.com/bucket/1/avatar_thumb.webp'),
-					]
-				)
+				content: new OA\JsonContent(ref: '#/components/schemas/AvatarResponse')
 			),
 			new OA\Response(
 				response: 400,

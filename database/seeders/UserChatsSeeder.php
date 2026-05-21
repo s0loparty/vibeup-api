@@ -13,141 +13,150 @@ use Illuminate\Support\Facades\DB;
 
 class UserChatsSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
-    {
-        if (app()->environment('production')) {
-            $this->command->error('This seeder is not intended for production environments.');
+	/**
+	 * Run the database seeds.
+	 */
+	public function run(): void
+	{
+		if (app()->environment('production')) {
+			$this->command->error('This seeder is not intended for production environments.');
 
-            return;
-        }
+			return;
+		}
 
-        $chatsPerUser = 60;
-        $messagesPerChat = 100;
+		$chatsPerUser = 60;
+		$messagesPerChat = 100;
 
-        $this->command->warn("This seeder will create {$chatsPerUser} chats for EACH user, with {$messagesPerChat} messages in each chat.");
-        $this->command->warn('This will generate a large amount of data and may take some time.');
+		$this->command->warn("This seeder will create {$chatsPerUser} chats for EACH user, with {$messagesPerChat} messages in each chat.");
+		$this->command->warn('This will generate a large amount of data and may take some time.');
 
-        if (! $this->command->confirm('Do you wish to continue?', false)) {
-            $this->command->info('Seeding cancelled.');
+		if (! $this->command->confirm('Do you wish to continue?', false)) {
+			$this->command->info('Seeding cancelled.');
 
-            return;
-        }
+			return;
+		}
 
-        $users = User::all();
-        if ($users->isEmpty()) {
-            $this->command->info('No users found. Creating 5 new users first.');
-            $users = User::factory()->count(5)->create();
-        }
+		$users = User::all();
+		if ($users->isEmpty()) {
+			$this->command->info('No users found. Creating 5 new users first.');
+			$users = User::factory()->count(5)->create();
+		}
 
-        $this->command->info("Starting to seed for {$users->count()} users.");
-        $totalChats = $users->count() * $chatsPerUser;
-        $totalMessages = $totalChats * $messagesPerChat;
-        $this->command->info("Will create {$totalChats} chats and {$totalMessages} messages.");
+		$this->command->info("Starting to seed for {$users->count()} users.");
+		$totalChats = $users->count() * $chatsPerUser;
+		$totalMessages = $totalChats * $messagesPerChat;
+		$this->command->info("Will create {$totalChats} chats and {$totalMessages} messages.");
 
-        $progressBar = $this->command->getOutput()->createProgressBar($users->count());
-        $progressBar->start();
+		$progressBar = $this->command->getOutput()->createProgressBar($users->count());
+		$progressBar->start();
 
-        $messageTypes = MessageType::cases();
-        $chatTypes = ChatType::cases();
+		$messageTypes = MessageType::cases();
+		$chatTypes = ChatType::cases();
 
-        foreach ($users as $user) {
-            $chatIds = [];
+		foreach ($users as $user) {
+			$chatIds = [];
 
-            for ($i = 0; $i < $chatsPerUser; $i++) {
-                $chatType = $chatTypes[array_rand($chatTypes)];
+			for ($i = 0; $i < $chatsPerUser; $i++) {
+				$chatType = $chatTypes[array_rand($chatTypes)];
 
-                // Для приватных чатов title = NULL, для групп - название компании
-                $title = $chatType === ChatType::GROUP ? fake()->company() : null;
+				// Для приватных чатов title = NULL, для групп - название компании
+				$title = $chatType === ChatType::GROUP ? fake()->company() : null;
 
-                $chatId = DB::table('chats')->insertGetId([
-                    'type' => $chatType->value,
-                    'title' => $title,
-                    'created_by' => $user->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                $chatIds[] = $chatId;
-            }
+				$chatId = DB::table('chats')->insertGetId([
+					'type' => $chatType->value,
+					'title' => $title,
+					'created_by' => $user->id,
+					'created_at' => now(),
+					'updated_at' => now(),
+				]);
+				$chatIds[] = $chatId;
+			}
 
-            foreach ($chatIds as $chatId) {
-                // Участники чата
-                $memberData = [
-                    [
-                        'chat_id' => $chatId,
-                        'user_id' => $user->id,
-                        'role' => ChatMemberRole::OWNER->value,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ],
-                ];
+			foreach ($chatIds as $chatId) {
+				// Участники чата
+				$memberData = [
+					[
+						'chat_id' => $chatId,
+						'user_id' => $user->id,
+						'role' => ChatMemberRole::OWNER->value,
+						'created_at' => now(),
+						'updated_at' => now(),
+					],
+				];
 
-                // Добавляем 1-3 случайных участников
-                $otherMembers = User::where('id', '!=', $user->id)
-                    ->inRandomOrder()
-                    ->limit(rand(1, 3))
-                    ->get();
+				// Добавляем 1-3 случайных участников
+				$otherMembers = User::where('id', '!=', $user->id)
+					->inRandomOrder()
+					->limit(rand(1, 3))
+					->get();
 
-                foreach ($otherMembers as $member) {
-                    $memberData[] = [
-                        'chat_id' => $chatId,
-                        'user_id' => $member->id,
-                        'role' => ChatMemberRole::MEMBER->value,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
+				foreach ($otherMembers as $member) {
+					$memberData[] = [
+						'chat_id' => $chatId,
+						'user_id' => $member->id,
+						'role' => ChatMemberRole::MEMBER->value,
+						'created_at' => now(),
+						'updated_at' => now(),
+					];
+				}
 
-                ChatMember::insert($memberData);
+				ChatMember::insert($memberData);
 
-                // Собираем ID всех участников для сообщений
-                $allMemberIds = array_column($memberData, 'user_id');
+				// Собираем ID всех участников для сообщений
+				$allMemberIds = array_column($memberData, 'user_id');
 
-                // Создаем сообщения чанками по 500
-                $messageData = [];
-                $baseTime = now()->subDays(rand(0, 30));
+				// Создаем сообщения чанками по 500
+				$messageData = [];
+				$baseTime = now()->subDays(rand(0, 30));
 
-                for ($m = 0; $m < $messagesPerChat; $m++) {
-                    $messageData[] = [
-                        'chat_id' => $chatId,
-                        'sender_id' => $allMemberIds[array_rand($allMemberIds)],
-                        'type' => $messageTypes[array_rand($messageTypes)]->value,
-                        'body' => fake()->sentence(rand(3, 15)),
-                        'reply_to_id' => null,
-                        'edited_at' => null,
-                        'created_at' => $baseTime->copy()->addSeconds($m * rand(10, 300)),
-                        'updated_at' => now(),
-                    ];
+				$daysCount = 7; // за 7 дней
+				$messagesPerDay = $messagesPerChat / $daysCount;
 
-                    // Вставляем чанками
-                    if (count($messageData) >= 500) {
-                        Message::insert($messageData);
-                        $messageData = [];
-                    }
-                }
+				for ($day = 0; $day < $daysCount; $day++) {
+					$dayStart = $baseTime->copy()->subDays($daysCount - $day);
+					$dayEnd = $dayStart->copy()->endOfDay();
 
-                // Вставляем оставшиеся сообщения
-                if (! empty($messageData)) {
-                    Message::insert($messageData);
-                }
+					for ($m = 0; $m < $messagesPerDay; $m++) {
+						$randomTimeInDay = $dayStart->copy()->addSeconds(rand(0, $dayEnd->diffInSeconds($dayStart)));
 
-                // Обновляем last_message_id для чата
-                $lastMessageId = DB::table('messages')
-                    ->where('chat_id', $chatId)
-                    ->max('id');
+						$messageData[] = [
+							'chat_id' => $chatId,
+							'sender_id' => $allMemberIds[array_rand($allMemberIds)],
+							'type' => $messageTypes[array_rand($messageTypes)]->value,
+							'body' => fake()->sentence(rand(3, 15)),
+							'reply_to_id' => null,
+							'edited_at' => null,
+							'created_at' => $randomTimeInDay,
+							'updated_at' => now(),
+						];
 
-                DB::table('chats')
-                    ->where('id', $chatId)
-                    ->update(['last_message_id' => $lastMessageId]);
-            }
+						if (count($messageData) >= 500) {
+							Message::insert($messageData);
+							$messageData = [];
+						}
+					}
+				}
 
-            $progressBar->advance();
-        }
+				// Вставляем оставшиеся сообщения
+				if (! empty($messageData)) {
+					Message::insert($messageData);
+				}
 
-        $progressBar->finish();
-        $this->command->newLine(2);
-        $this->command->info("Successfully seeded {$totalChats} chats and {$totalMessages} messages for {$users->count()} users.");
-    }
+				// Обновляем last_message_id для чата
+				$lastMessageId = DB::table('messages')
+					->where('chat_id', $chatId)
+					->max('id');
+
+				DB::table('chats')
+					->where('id', $chatId)
+					->update(['last_message_id' => $lastMessageId]);
+			}
+
+			$progressBar->advance();
+		}
+
+		$progressBar->finish();
+		$this->command->newLine(2);
+		$this->command->info("Successfully seeded {$totalChats} chats and {$totalMessages} messages for {$users->count()} users.");
+	}
 }

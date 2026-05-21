@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
 		]);
 
 		$groupMembers = collect([$mainUser])->merge($otherUsers->slice(0, 4));
-		$groupMembers->each(fn (User $user) => ChatMember::factory()->create([
+		$groupMembers->each(fn(User $user) => ChatMember::factory()->create([
 			'chat_id' => $groupChat->id,
 			'user_id' => $user->id,
 			'role' => $user->id === $mainUser->id ? ChatMemberRole::OWNER : ChatMemberRole::MEMBER,
@@ -55,7 +55,7 @@ class DatabaseSeeder extends Seeder
 		]);
 		$privateChatMembers = collect([$mainUser, $otherUsers->get(5)]);
 
-		$privateChatMembers->each(fn (User $user) => ChatMember::factory()->create([
+		$privateChatMembers->each(fn(User $user) => ChatMember::factory()->create([
 			'chat_id' => $privateChat->id,
 			'user_id' => $user->id,
 			'role' => ChatMemberRole::MEMBER,
@@ -76,5 +76,6 @@ class DatabaseSeeder extends Seeder
 		$this->command->info('Last message IDs updated.');
 
 		$this->command->info('Database seeding completed successfully!');
+		$this->call([UserChatsSeeder::class]);
 	}
 }

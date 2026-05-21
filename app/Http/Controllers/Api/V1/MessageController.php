@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
 
 use App\Data\Message\CreateMessageData;
@@ -108,8 +107,9 @@ class MessageController extends Controller
 
 		$paginator = $query->cursorPaginate(30);
 
+		// убрал reverse
 		$items = PublicMessageResource::collection(
-			collect($paginator->items())->reverse()->values()
+			collect($paginator->items())
 		);
 
 		return new CursorPaginatedResource($paginator, ['data' => $items]);
@@ -366,5 +366,57 @@ class MessageController extends Controller
 			'status' => 'success',
 			'message' => 'The message was successfully deleted.',
 		]);
+	}
+
+	#[OA\Get(
+		path: '/api/v1/chats/{chat}/messages/context/{message}',
+		operationId: 'messages.context',
+		summary: 'Получить сообщение с контекстом',
+		description: 'Возвращает целевое сообщение и N следующих сообщений, а также курсоры для пагинации',
+		tags: ['Сообщения'],
+		security: [['bearerAuth' => []]],
+		parameters: [
+			new OA\Parameter(
+				name: 'chat',
+				in: 'path',
+				required: true,
+				description: 'ID чата',
+				schema: new OA\Schema(type: 'integer')
+			),
+			new OA\Parameter(
+				name: 'message',
+				in: 'path',
+				required: true,
+				description: 'ID сообщения',
+				schema: new OA\Schema(type: 'integer')
+			),
+			new OA\Parameter(
+				name: 'limit',
+				in: 'query',
+				required: false,
+				description: 'Количество сообщений после целевого (по умолчанию 30)',
+				schema: new OA\Schema(type: 'integer', default: 30)
+			),
+		],
+		responses: [
+			new OA\Response(
+				response: 200,
+				description: 'Успешный ответ',
+				content: new OA\JsonContent(
+					properties: [
+						new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/PublicMessage')),
+						new OA\Property(property: 'prev_cursor', type: 'string', nullable: true),
+						new OA\Property(property: 'next_cursor', type: 'string', nullable: true),
+						new OA\Property(property: 'target_message_id', type: 'integer'),
+					]
+				)
+			),
+			new OA\Response(response: 403, description: 'Нет доступа'),
+			new OA\Response(response: 404, description: 'Сообщение не найдено'),
+		]
+	)]
+	public function context(Request $request, Chat $chat, int $message)
+	{
+		return app(\App\Services\MessageService::class)->context($request, $chat, $message);
 	}
 }

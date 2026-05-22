@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Data\Message\CreateMessageData;
@@ -6,10 +7,12 @@ use App\Data\Message\UpdateMessageData;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CursorPaginatedResource;
 use App\Http\Resources\Message\PublicMessageResource;
+use App\Http\Resources\MessageSearchResource;
 use App\Models\Chat;
 use App\Models\Message;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use OpenApi\Attributes as OA;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -372,7 +375,7 @@ class MessageController extends Controller
 		path: '/api/v1/chats/{chat}/messages/context/{message}',
 		operationId: 'messages.context',
 		summary: 'Получить сообщение с контекстом',
-		description: 'Возвращает целевое сообщение и N следующих сообщений, а также курсоры для пагинации',
+		description: 'Возвращает все сообщения после целевого, само целевое сообщение и N предыдущих (до целевого), а также курсоры для пагинации',
 		tags: ['Сообщения'],
 		security: [['bearerAuth' => []]],
 		parameters: [
@@ -394,7 +397,7 @@ class MessageController extends Controller
 				name: 'limit',
 				in: 'query',
 				required: false,
-				description: 'Количество сообщений после целевого (по умолчанию 30)',
+				description: 'Количество сообщений перед целевым (по умолчанию 30)',
 				schema: new OA\Schema(type: 'integer', default: 30)
 			),
 		],
@@ -418,5 +421,119 @@ class MessageController extends Controller
 	public function context(Request $request, Chat $chat, int $message)
 	{
 		return app(\App\Services\MessageService::class)->context($request, $chat, $message);
+	}
+
+	#[OA\Get(
+		path: '/api/v1/chats/{chat}/messages/search',
+		operationId: 'messages.search',
+		summary: 'Поиск сообщений в чате',
+		description: 'Выполняет нечеткий поиск по тексту сообщений в указанном чате с использованием алгоритма Левенштейна. Поддерживает толерантность к опечаткам. Результаты фильтруются по порогу релевантности (_score >= 0.3)',
+		tags: ['Сообщения'],
+		security: [['bearerAuth' => []]],
+		parameters: [
+			new OA\Parameter(
+				name: 'chat',
+				in: 'path',
+				required: true,
+				description: 'ID чата',
+				schema: new OA\Schema(type: 'integer')
+			),
+			new OA\Parameter(
+				name: 'q',
+				in: 'query',
+				required: true,
+				description: 'Поисковый запрос',
+				schema: new OA\Schema(type: 'string', minLength: 1)
+			),
+			new OA\Parameter(
+				name: 'page',
+				in: 'query',
+				required: false,
+				description: 'Номер страницы',
+				schema: new OA\Schema(type: 'integer', default: 1)
+			),
+			new OA\Parameter(
+				name: 'per_page',
+				in: 'query',
+				required: false,
+				description: 'Количество результатов на странице (по умолчанию 15)',
+				schema: new OA\Schema(type: 'integer', default: 15)
+			),
+		],
+		responses: [
+			new OA\Response(
+				response: 200,
+				description: 'Успешный ответ',
+				content: new OA\JsonContent(
+					properties: [
+						new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/MessageSearch')),
+						new OA\Property(property: 'current_page', type: 'integer'),
+						new OA\Property(property: 'per_page', type: 'integer'),
+						new OA\Property(property: 'total', type: 'integer'),
+						new OA\Property(property: 'last_page', type: 'integer'),
+						new OA\Property(
+							property: 'links',
+							type: 'object',
+							properties: [
+								new OA\Property(property: 'first', type: 'string', nullable: true),
+								new OA\Property(property: 'last', type: 'string', nullable: true),
+								new OA\Property(property: 'prev', type: 'string', nullable: true),
+								new OA\Property(property: 'next', type: 'string', nullable: true),
+							]
+						),
+						new OA\Property(
+							property: 'meta',
+							type: 'object',
+							properties: [
+								new OA\Property(property: 'current_page', type: 'integer'),
+								new OA\Property(property: 'from', type: 'integer', nullable: true),
+								new OA\Property(property: 'last_page', type: 'integer'),
+								new OA\Property(property: 'path', type: 'string'),
+								new OA\Property(property: 'per_page', type: 'integer'),
+								new OA\Property(property: 'to', type: 'integer', nullable: true),
+								new OA\Property(property: 'total', type: 'integer'),
+							]
+						),
+					]
+				)
+			),
+			new OA\Response(
+				response: 400,
+				description: 'Не указан поисковый запрос',
+				content: new OA\JsonContent(
+					properties: [
+						new OA\Property(property: 'message', type: 'string', example: 'Search query parameter "q" is required'),
+					]
+				)
+			),
+			new OA\Response(response: 403, description: 'Нет доступа к чату'),
+			new OA\Response(response: 404, description: 'Чат не найден'),
+		]
+	)]
+	public function search(Request $request, Chat $chat): JsonResponse
+	{
+		$searchPattern = $request->input("q");
+
+		$messages = Message::search($searchPattern)
+			->highlight('<mark>', '</mark>')
+			->searchIn(['body' => 10])
+			->filter('chat_id', $chat->id)
+			->using('levenshtein')
+			->typoTolerance(1)
+			->simplePaginate();
+
+		$messagesResource = MessageSearchResource::collection($messages->items())->toArray($request);
+		$filteredItems = collect($messagesResource)
+			->filter(fn($item) => ($item['_score'] ?? 0) >= 0.3)
+			->values();
+
+		$filteredPaginator = new LengthAwarePaginator(
+			items: $filteredItems,
+			total: $filteredItems->count(),
+			perPage: $messages->perPage(),
+			currentPage: $messages->currentPage(),
+		);
+
+		return response()->json($filteredPaginator, 200);
 	}
 }

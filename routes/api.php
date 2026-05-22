@@ -43,6 +43,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 		Route::get('chats/{chat}/messages/context/{message}', [MessageController::class, 'context'])
 			->name('chats.messages.context');
 
+		Route::get('chats/{chat}/messages/search', [MessageController::class, 'search'])
+			->name('chats.messages.search');
+
 		// Message routes nested within chats
 		Route::apiResource('chats.messages', MessageController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->shallow();
 	});

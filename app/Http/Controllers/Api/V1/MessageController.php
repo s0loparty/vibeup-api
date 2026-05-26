@@ -10,6 +10,7 @@ use App\Http\Resources\Message\PublicMessageResource;
 use App\Http\Resources\MessageSearchResource;
 use App\Models\Chat;
 use App\Models\Message;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -522,7 +523,11 @@ class MessageController extends Controller
 			->typoTolerance(1)
 			->simplePaginate();
 
-		$messagesResource = MessageSearchResource::collection($messages->items())->toArray($request);
+		$eloquentCollection = Collection::make($messages->items());
+		$eloquentCollection->load('sender');
+
+		$messagesResource = MessageSearchResource::collection($eloquentCollection)->toArray($request);
+
 		$filteredItems = collect($messagesResource)
 			->filter(fn($item) => ($item['_score'] ?? 0) >= 0.3)
 			->values();

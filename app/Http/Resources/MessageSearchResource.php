@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\User\PublicUserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,6 +24,7 @@ class MessageSearchResource extends JsonResource
 			"edited_at" => $this->edited_at,
 			"created_at" => $this->created_at,
 			"_score" => $this->_score ?? null,
+			"sender" => new PublicUserResource($this->whenLoaded('sender')),
 		];
 	}
 }

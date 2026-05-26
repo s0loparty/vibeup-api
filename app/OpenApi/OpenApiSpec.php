@@ -164,7 +164,7 @@ use OpenApi\Attributes as OA;
 				schema: 'MessageSearch',
 				title: 'MessageSearch',
 				description: 'Сообщения неточного поиска',
-				required: ['id', 'sender_id', 'type', 'body', 'created_at', 'edited_at', '_score'],
+				required: ['id', 'sender_id', 'type', 'body', 'created_at', 'edited_at', '_score', 'sender'],
 				properties: [
 					new OA\Property(property: 'id', type: 'integer', example: 1),
 					new OA\Property(property: 'sender_id', type: 'integer', example: 1),
@@ -173,9 +173,9 @@ use OpenApi\Attributes as OA;
 					new OA\Property(property: 'reply_to_id', type: 'integer', nullable: true),
 					new OA\Property(property: 'edited_at', type: 'string', format: 'date-time', nullable: true),
 					new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
-					new OA\Property(property: 'sender', ref: '#/components/schemas/PublicUser', nullable: true),
 					new OA\Property(property: 'reply_to', ref: '#/components/schemas/PublicMessage', nullable: true),
 					new OA\Property(property: '_score', type: 'integer', example: 0.75),
+					new OA\Property(property: 'sender', ref: '#/components/schemas/PublicUser', nullable: true),
 				]
 			),
 

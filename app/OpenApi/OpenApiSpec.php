@@ -159,6 +159,27 @@ use OpenApi\Attributes as OA;
 				]
 			),
 
+			//MessageSearch
+			new OA\Schema(
+				schema: 'MessageSearch',
+				title: 'MessageSearch',
+				description: 'Сообщения неточного поиска',
+				required: ['id', 'sender_id', 'type', 'body', 'created_at', 'edited_at', '_score', 'sender'],
+				properties: [
+					new OA\Property(property: 'id', type: 'integer', example: 1),
+					new OA\Property(property: 'sender_id', type: 'integer', example: 1),
+					new OA\Property(property: 'type', type: 'string', enum: ['text', 'image', 'video', 'audio', 'file'], example: 'text'),
+					new OA\Property(property: 'body', type: 'string', example: 'Привет, как дела?'),
+					new OA\Property(property: 'reply_to_id', type: 'integer', nullable: true),
+					new OA\Property(property: 'edited_at', type: 'string', format: 'date-time', nullable: true),
+					new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+					new OA\Property(property: 'reply_to', ref: '#/components/schemas/PublicMessage', nullable: true),
+					new OA\Property(property: '_score', type: 'integer', example: 0.75),
+					new OA\Property(property: 'sender', ref: '#/components/schemas/PublicUser', nullable: true),
+				]
+			),
+
+
 			// Cursor Pagination Meta
 			new OA\Schema(
 				schema: 'CursorPaginationMeta',

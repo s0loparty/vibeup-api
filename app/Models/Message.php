@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MessageType;
 use App\Observers\MessageFileObserver;
+use Ashiqfardus\LaravelFuzzySearch\Traits\Searchable;
 use Database\Factories\MessageFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +19,7 @@ use Spatie\QueryBuilder\AllowedSort;
 class Message extends Model
 {
 	/** @use HasFactory<MessageFactory> */
-	use HasFactory;
+	use HasFactory, Searchable;
 
 	protected $fillable = ['chat_id', 'sender_id', 'type', 'body', 'reply_to', 'edited_at'];
 

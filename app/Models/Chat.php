@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ChatType;
+use Ashiqfardus\LaravelFuzzySearch\Traits\Searchable;
 use Database\Factories\ChatFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +18,7 @@ use Spatie\QueryBuilder\AllowedSort;
 class Chat extends Model
 {
 	/** @use HasFactory<ChatFactory> */
-	use HasFactory;
+	use HasFactory, Searchable;
 
 	protected $casts = [
 		'type' => ChatType::class,

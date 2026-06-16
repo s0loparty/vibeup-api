@@ -24,7 +24,7 @@ class UserChatsSeeder extends Seeder
 			return;
 		}
 
-		$chatsPerUser = 60;
+		$chatsPerUser    = 60;
 		$messagesPerChat = 100;
 
 		$this->command->warn("This seeder will create {$chatsPerUser} chats for EACH user, with {$messagesPerChat} messages in each chat.");
@@ -43,7 +43,7 @@ class UserChatsSeeder extends Seeder
 		}
 
 		$this->command->info("Starting to seed for {$users->count()} users.");
-		$totalChats = $users->count() * $chatsPerUser;
+		$totalChats    = $users->count() * $chatsPerUser;
 		$totalMessages = $totalChats * $messagesPerChat;
 		$this->command->info("Will create {$totalChats} chats and {$totalMessages} messages.");
 
@@ -51,7 +51,7 @@ class UserChatsSeeder extends Seeder
 		$progressBar->start();
 
 		$messageTypes = MessageType::cases();
-		$chatTypes = ChatType::cases();
+		$chatTypes    = ChatType::cases();
 
 		foreach ($users as $user) {
 			$chatIds = [];
@@ -62,7 +62,7 @@ class UserChatsSeeder extends Seeder
 				// Для приватных чатов title = NULL, для групп - название компании
 				$title = $chatType === ChatType::GROUP ? fake()->company() : null;
 
-				$chatId = DB::table('chats')->insertGetId([
+				$chatId    = DB::table('chats')->insertGetId([
 					'type' => $chatType->value,
 					'title' => $title,
 					'created_by' => $user->id,
@@ -73,6 +73,9 @@ class UserChatsSeeder extends Seeder
 			}
 
 			foreach ($chatIds as $chatId) {
+				// Получаем тип чата
+				$chatType = DB::table('chats')->where('id', $chatId)->value('type');
+
 				// Участники чата
 				$memberData = [
 					[
@@ -84,10 +87,18 @@ class UserChatsSeeder extends Seeder
 					],
 				];
 
-				// Добавляем 1-3 случайных участников
+				// Определяем сколько участников добавить в зависимости от типа чата
+				if ($chatType === ChatType::PRIVATE ->value) {
+					// Для приватного чата - ровно 1 другой участник
+					$otherMembersLimit = 1;
+				} else {
+					// Для группы - 1-5 других участника
+					$otherMembersLimit = rand(1, 5);
+				}
+
 				$otherMembers = User::where('id', '!=', $user->id)
 					->inRandomOrder()
-					->limit(rand(1, 3))
+					->limit($otherMembersLimit)
 					->get();
 
 				foreach ($otherMembers as $member) {
@@ -107,14 +118,14 @@ class UserChatsSeeder extends Seeder
 
 				// Создаем сообщения чанками по 500
 				$messageData = [];
-				$baseTime = now()->subDays(rand(0, 30));
+				$baseTime    = now()->subDays(rand(0, 30));
 
-				$daysCount = 7; // за 7 дней
+				$daysCount      = 7; // за 7 дней
 				$messagesPerDay = $messagesPerChat / $daysCount;
 
 				for ($day = 0; $day < $daysCount; $day++) {
 					$dayStart = $baseTime->copy()->subDays($daysCount - $day);
-					$dayEnd = $dayStart->copy()->endOfDay();
+					$dayEnd   = $dayStart->copy()->endOfDay();
 
 					for ($m = 0; $m < $messagesPerDay; $m++) {
 						$randomTimeInDay = $dayStart->copy()->addSeconds(rand(0, $dayEnd->diffInSeconds($dayStart)));

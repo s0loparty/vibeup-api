@@ -401,6 +401,13 @@ class MessageController extends Controller
 				description: 'Количество сообщений перед целевым (по умолчанию 30)',
 				schema: new OA\Schema(type: 'integer', default: 30)
 			),
+			new OA\Parameter(  // ← ДОБАВИТЬ ЭТОТ ПАРАМЕТР
+				name: 'prev_cursor',
+				in: 'query',
+				required: false,
+				description: 'Курсор для пагинации (для загрузки следующих порций старых сообщений)',
+				schema: new OA\Schema(type: 'string')
+			),
 		],
 		responses: [
 			new OA\Response(
@@ -513,32 +520,43 @@ class MessageController extends Controller
 	)]
 	public function search(Request $request, Chat $chat): JsonResponse
 	{
-		$searchPattern = $request->input("q");
+		$searchPattern = $request->input('q');
+		$perPage = (int) $request->input('per_page', 15);
+		$page = LengthAwarePaginator::resolveCurrentPage();
 
 		$messages = Message::search($searchPattern)
 			->highlight('<mark>', '</mark>')
-			->searchIn(['body' => 10])
+			->searchIn(['body'])
 			->filter('chat_id', $chat->id)
 			->using('levenshtein')
-			->typoTolerance(1)
-			->simplePaginate();
+			->typoTolerance(0)
+			->get();
 
-		$eloquentCollection = Collection::make($messages->items());
+		$eloquentCollection = Collection::make($messages);
 		$eloquentCollection->load('sender');
 
-		$messagesResource = MessageSearchResource::collection($eloquentCollection)->toArray($request);
+		$resourceItems = MessageSearchResource::collection($eloquentCollection)
+			->toArray($request);
 
-		$filteredItems = collect($messagesResource)
+		$filteredItems = collect($resourceItems)
 			->filter(fn($item) => ($item['_score'] ?? 0) >= 0.3)
 			->values();
 
-		$filteredPaginator = new LengthAwarePaginator(
-			items: $filteredItems,
+		$paginatedItems = $filteredItems
+			->forPage($page, $perPage)
+			->values();
+
+		$paginator = new LengthAwarePaginator(
+			items: $paginatedItems,
 			total: $filteredItems->count(),
-			perPage: $messages->perPage(),
-			currentPage: $messages->currentPage(),
+			perPage: $perPage,
+			currentPage: $page,
+			options: [
+				'path' => $request->url(),
+				'query' => $request->query(),
+			],
 		);
 
-		return response()->json($filteredPaginator, 200);
+		return response()->json($paginator);
 	}
 }

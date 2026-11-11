@@ -36,17 +36,21 @@ class MessageService
 		$afterMessages = Message::where('chat_id', $chat->id)
 			->where('id', '>', $target->id)
 			->orderBy('id', 'asc')
+			->with('sender')
 			->get();
 
 		// 2. До $limitOld сообщений до целевого (старые)
 		$beforeMessages = Message::where('chat_id', $chat->id)
 			->where('id', '<', $target->id)
 			->orderBy('id', 'desc')
+			->with('sender')
 			->limit($limitOld)
 			->get()
 			->reverse();
 
 		// 3. Объединяем: старые + целевое + все новые
+		// Загружаем sender для целевого сообщения
+		$target->load('sender');
 		$messages = $beforeMessages->concat([$target])->concat($afterMessages);
 
 		// 4. Генерируем prev_cursor для подгрузки ещё более старых (если есть)

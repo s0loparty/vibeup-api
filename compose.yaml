@@ -14,6 +14,7 @@ services:
     environment:
       WWWUSER: '${WWWUSER}'
       LARAVEL_SAIL: 1
+      QUEUE_CONNECTION: redis
       XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
       XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
       IGNITION_LOCAL_SITES_PATH: '${PWD}'
@@ -26,6 +27,26 @@ services:
       - redis
       - minio
       - mailpit
+  queue:
+    image: 'sail-8.4/app'
+    restart: unless-stopped
+    command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=60
+    stop_grace_period: 70s
+    environment:
+      WWWUSER: '${WWWUSER}'
+      LARAVEL_SAIL: 1
+      QUEUE_CONNECTION: redis
+    volumes:
+      - '.:/var/www/html'
+    networks:
+      - sail
+    depends_on:
+      laravel.test:
+        condition: service_started
+      pgsql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
   pgsql:
     image: 'postgres:18-alpine'
     ports:

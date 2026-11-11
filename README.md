@@ -1,59 +1,184 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Vibe API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API мессенджера на Laravel 12. В проекте используются PostgreSQL, Redis, Laravel Reverb и S3-совместимое хранилище. Веб-интерфейса пока нет, поэтому сборка Vite для запуска API не требуется.
 
-## About Laravel
+## Требования
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Docker Engine с Docker Compose или Docker Desktop. В Windows включите интеграцию Docker Desktop с нужным дистрибутивом WSL 2 и выполняйте команды внутри WSL.
+- Git. Для работы с приватным репозиторием и образами GHCR понадобятся соответствующие права доступа.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+PHP и Composer на компьютере устанавливать не нужно: они запускаются в Docker. Текущий production-образ использует PHP 8.4.27; образ Sail при сборке проверяет, что версия PHP не ниже 8.4.27.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Локальный запуск через Sail
 
-## Learning Laravel
+Клонируйте репозиторий и перейдите в его каталог:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+git clone https://github.com/s0loparty/vibeup-api.git
+cd vibeup-api
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Дальнейшие команды выполняются из корня репозитория. Если `.env` уже существует, сохраните его и не перезаписывайте.
 
-## Laravel Sponsors
+1. Создайте файл окружения и настройте его:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+   ```bash
+   cp .env.example .env
+   ```
 
-### Premium Partners
+   В `.env` замените настройки базы и Redis на следующие. Удалите или измените существующие строки с этими именами, чтобы каждая переменная была задана один раз:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+   ```dotenv
+   APP_URL=http://localhost
+   DB_CONNECTION=pgsql
+   DB_HOST=pgsql
+   DB_PORT=5432
+   DB_DATABASE=laravel
+   DB_USERNAME=sail
+   DB_PASSWORD=password
 
-## Contributing
+   REDIS_CLIENT=phpredis
+   REDIS_HOST=redis
+   REDIS_PASSWORD=null
+   REDIS_PORT=6379
+   QUEUE_CONNECTION=redis
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+   `DB_PASSWORD` должен быть непустым. Если порт 80 занят, задайте, например, `APP_PORT=8080` и соответствующий `APP_URL`. Изменение учётных данных PostgreSQL в `.env` не меняет пользователя и пароль уже созданной базы в томе Docker.
 
-## Code of Conduct
+2. Установите Composer-зависимости через контейнер Sail. Это создаст `vendor/bin/sail` даже на свежем клоне:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+   ```bash
+   WWWUSER="$(id -u)" WWWGROUP="$(id -g)" docker compose run --rm --no-deps --build laravel.test composer install
+   ```
 
-## Security Vulnerabilities
+3. Запустите сервисы, создайте ключ приложения и примените миграции:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+   ```bash
+   ./vendor/bin/sail up -d
+   ./vendor/bin/sail artisan key:generate --no-interaction
+   ./vendor/bin/sail restart queue
+   ./vendor/bin/sail artisan migrate --no-interaction
+   ```
 
-## License
+   `key:generate` выполняется при первоначальной установке. Сохраняйте `APP_KEY`: его смена сделает ранее зашифрованные данные недоступными.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+4. Для загрузки файлов настройте локальный MinIO. В `.env` укажите отдельные приватный и публичный бакеты:
+
+   ```dotenv
+   FILESYSTEM_DISK=minio
+   MEDIA_DISK=minio
+   AWS_ACCESS_KEY_ID=sail
+   AWS_SECRET_ACCESS_KEY=password
+   AWS_DEFAULT_REGION=us-east-1
+   AWS_BUCKET=user-media
+   AWS_PUBLIC_BUCKET=user-media-public
+   AWS_ENDPOINT=http://minio:9000
+   AWS_URL=http://localhost:9000/user-media
+   AWS_PUBLIC_URL=http://localhost:9000/user-media-public
+   AWS_USE_PATH_STYLE_ENDPOINT=true
+   ```
+
+   После готовности MinIO создайте бакеты:
+
+   ```bash
+   ./vendor/bin/sail artisan minio:setup-buckets --no-interaction
+   ```
+
+   Команда устанавливает публичную политику чтения для `AWS_PUBLIC_BUCKET`. Не используйте для него имя приватного `AWS_BUCKET`. Учётные данные MinIO в локальном Compose заданы как `sail` / `password` и предназначены только для разработки.
+
+По умолчанию API доступен на порту `80`, MinIO API — на `9000`, консоль MinIO — на `8900`, интерфейс Mailpit — на `8025`. Порты можно изменить в `.env` через `APP_PORT` и переменные `FORWARD_*` из `compose.yaml`; при смене порта MinIO обновите также `AWS_URL` и `AWS_PUBLIC_URL`.
+
+Сервис `queue` автоматически запускает обработчик Redis и перезапускается вместе со стеком. Ручной запуск `queue:work` не нужен. После изменения `.env` перезапустите обработчик командой `./vendor/bin/sail restart queue`, чтобы он перечитал настройки. Локальный Compose не запускает и не публикует Reverb: для проверки WebSocket потребуется отдельно настроить и запустить сервер Reverb, его порт и `REVERB_*`.
+
+Полезные команды:
+
+```bash
+./vendor/bin/sail ps
+./vendor/bin/sail logs -f queue
+./vendor/bin/sail artisan test --compact
+./vendor/bin/sail down
+```
+
+После изменения Dockerfile пересоберите образ и пересоздайте контейнеры:
+
+```bash
+./vendor/bin/sail build --no-cache
+./vendor/bin/sail up -d
+```
+
+Команда `down` сохраняет тома PostgreSQL, Redis и MinIO. Удаление томов приведёт к потере хранящихся в них данных.
+
+## Развёртывание в Dokploy
+
+### Публикация образов
+
+После push в любую ветку, включая push после merge, GitHub Actions собирает и публикует образы `dokploy-app` и `dokploy-web` в GHCR. Workflow находится в `.github/workflows/dokploy-images.yml`; по умолчанию Compose использует репозиторий `ghcr.io/s0loparty/vibeup-api`.
+
+Каждый образ получает тег ветки и `sha-<полный SHA коммита>`. Например, ветке `deploy/dokploy` соответствует тег `deploy-dokploy`. Тег `latest` обновляется только из `main`. Для точного соответствия образов одного коммита используйте SHA-тег.
+
+Дождитесь успешного выполнения workflow перед первым развёртыванием. Для приватных пакетов предоставьте серверу Dokploy доступ на чтение обоих образов GHCR через настройки реестра или Docker. При использовании другого GitHub-репозитория задайте `IMAGE_REPOSITORY` с его адресом в GHCR.
+
+### Создание сервиса
+
+1. В Dokploy создайте сервис **Compose**, выберите тип **Docker Compose**, подключите репозиторий и укажите `docker-compose.dokploy.yml` как Compose-файл.
+2. В разделе **Environment** задайте переменные. Пример ниже нужно заполнить собственными значениями:
+
+   ```dotenv
+   IMAGE_REPOSITORY=ghcr.io/s0loparty/vibeup-api
+   IMAGE_TAG=latest
+
+   APP_NAME=VibeAPI
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://api.example.com
+   APP_KEY=base64:ЗАМЕНИТЕ_НА_КЛЮЧ
+
+   DB_DATABASE=vibe
+   DB_USERNAME=vibe
+   DB_PASSWORD=ЗАМЕНИТЕ_НА_НАДЁЖНЫЙ_ПАРОЛЬ
+   REDIS_CLIENT=phpredis
+   REDIS_PASSWORD=null
+   QUEUE_CONNECTION=redis
+   SESSION_DRIVER=database
+   CACHE_STORE=database
+
+   BROADCAST_CONNECTION=reverb
+   REVERB_APP_ID=ЗАМЕНИТЕ
+   REVERB_APP_KEY=ЗАМЕНИТЕ
+   REVERB_APP_SECRET=ЗАМЕНИТЕ
+   REVERB_HOST=ws.example.com
+   REVERB_PORT=443
+   REVERB_SCHEME=https
+
+   FILESYSTEM_DISK=minio
+   MEDIA_DISK=minio
+   AWS_ACCESS_KEY_ID=ЗАМЕНИТЕ
+   AWS_SECRET_ACCESS_KEY=ЗАМЕНИТЕ
+   AWS_DEFAULT_REGION=us-east-1
+   AWS_BUCKET=private-bucket
+   AWS_PUBLIC_BUCKET=public-bucket
+   AWS_ENDPOINT=https://s3.example.com
+   AWS_URL=https://s3.example.com/private-bucket
+   AWS_PUBLIC_URL=https://s3.example.com/public-bucket
+   AWS_USE_PATH_STYLE_ENDPOINT=true
+   ```
+
+   `APP_KEY` должен быть корректным Laravel-ключом; его можно получить локально командой `./vendor/bin/sail artisan key:generate --show --no-interaction`. Сохраните его и не меняйте между развёртываниями. Подберите URLs и `AWS_USE_PATH_STYLE_ENDPOINT` согласно настройкам хранилища; endpoint должен быть доступен контейнерам. Проверяйте настройки почты и других интеграций отдельно.
+
+   Compose передаёт переменные из `.env` Dokploy в `app`, `queue` и `reverb`, а также принудительно задаёт для них PostgreSQL (`postgres:5432`), Redis (`redis:6379`) и очередь Redis. Встроенный Redis не настроен на пароль, поэтому для него нужен `REDIS_PASSWORD=null` без `REDIS_URL` с другими параметрами подключения.
+
+3. В разделе **Domains** назначьте домен API сервису `webserver` с внутренним портом `80`, а отдельный домен WebSocket — сервису `reverb` с внутренним портом `8080`. Настройте DNS и TLS; `REVERB_HOST` должен быть доступен приложению для отправки событий, а WebSocket-домен — клиентам. Подробнее: [домены Compose в Dokploy](https://docs.dokploy.com/docs/core/docker-compose/domains).
+4. Запустите развёртывание. В терминале контейнера `app` выполните миграции:
+
+   ```bash
+   php artisan migrate --force --no-interaction
+   ```
+
+   Миграции не выполняются автоматически: применяйте их при первом запуске и после обновлений, которые их содержат. Проверьте логи `app`, `queue` и `reverb` в Dokploy.
+
+Compose запускает PostgreSQL 17, Redis, приложение, Nginx, Reverb и обработчик очереди. Horizon и MinIO в этом Compose отключены. Для медиа нужен отдельно настроенный S3-совместимый сервис; бакеты и права доступа следует подготовить у поставщика. Очередь обрабатывается автоматически контейнером `queue`.
+
+PostgreSQL, Redis и `storage` используют именованные тома. Настройте резервное копирование и сохраняйте учётные данные PostgreSQL при повторном развёртывании. Локальный Sail использует PostgreSQL 18 и собственный том: перенос данных между окружениями и версиями PostgreSQL требует отдельной миграции, простая подмена тома не подходит.
+
+При обновлении дождитесь завершения публикации в GitHub Actions, выберите нужный `IMAGE_TAG` и повторно разверните Compose в Dokploy. Настройка Compose загружает готовые образы; автоматический вызов развёртывания после публикации в этом репозитории не настроен. Существующий workflow `deploy.yml` отдельно развёртывает ветку `devstage` на прежний VPS.

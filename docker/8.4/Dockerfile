@@ -39,6 +39,8 @@ RUN apt-get update -o Acquire::Retries=5 \
 RUN sed -i 's|http://mirror.yandex.ru|https://mirror.yandex.ru|g' /etc/apt/sources.list
 
 # основная установка
+ARG PHP_SECURITY_RELEASE=8.4.27
+COPY ondrej-php.asc /tmp/ondrej-php.asc
 RUN apt-get update -o Acquire::Retries=5 \
     && mkdir -p /etc/apt/keyrings \
     && apt-get install -y \
@@ -48,8 +50,7 @@ RUN apt-get update -o Acquire::Retries=5 \
         imagemagick libjpeg-turbo-progs ffmpeg \
     \
     # PHP repo
-    && curl -fsSL 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e53946656efbce4c1dd71daeaab4ad4cab6' \
-        | gpg --dearmor -o /etc/apt/keyrings/ppa_ondrej_php.gpg \
+    && gpg --dearmor -o /etc/apt/keyrings/ppa_ondrej_php.gpg /tmp/ondrej-php.asc \
     && echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" \
         > /etc/apt/sources.list.d/ppa_ondrej_php.list \
     \
@@ -91,6 +92,7 @@ RUN apt-get update -o Acquire::Retries=5 \
     && apt-get update -o Acquire::Retries=5 \
     && apt-get install -y $MYSQL_CLIENT postgresql-client-$POSTGRES_VERSION \
     \
+    && php -r 'if (version_compare(PHP_VERSION, getenv("PHP_SECURITY_RELEASE"), "<")) { fwrite(STDERR, "PHP security update required\n"); exit(1); }' \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

@@ -11,7 +11,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       QUEUE_CONNECTION: redis
-      # AWS_ENDPOINT: http://minio:9000
+      FILESYSTEM_DISK: minio
     volumes:
       - app-storage:/var/www/html/storage
     depends_on:
@@ -19,8 +19,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      # minio:
-      #   condition: service_started
+      minio-init:
+        condition: service_completed_successfully
 
   webserver:
     image: ${IMAGE_REPOSITORY:-ghcr.io/s0loparty/vibeup-api}/dokploy-web:${IMAGE_TAG:-latest}
@@ -95,18 +95,44 @@ services:
       timeout: 5s
       retries: 5
 
-#   minio:
-#     image: minio/minio:latest
-#     restart: unless-stopped
-#     command: server /data --console-address ':9001'
-#     environment:
-#       MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:?Set AWS_ACCESS_KEY_ID}
-#       MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:?Set AWS_SECRET_ACCESS_KEY}
-#     volumes:
-#       - minio-data:/data
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ':9001'
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:?Set AWS_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:?Set AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: ${IMAGE_REPOSITORY:-ghcr.io/s0loparty/vibeup-api}/dokploy-app:${IMAGE_TAG:-latest}
+    pull_policy: always
+    env_file: .env
+    environment:
+      AWS_ENDPOINT: http://minio:9000
+      AWS_BUCKET: ${AWS_BUCKET:?Set AWS_BUCKET}
+      AWS_PUBLIC_BUCKET: ${AWS_PUBLIC_BUCKET:?Set AWS_PUBLIC_BUCKET}
+    command:
+      - sh
+      - -c
+      - |
+        if [ "$$AWS_BUCKET" = "$$AWS_PUBLIC_BUCKET" ]; then
+          echo "AWS_BUCKET and AWS_PUBLIC_BUCKET must be different" >&2
+          exit 1
+        fi
+        exec php artisan minio:setup-buckets --no-interaction
+    depends_on:
+      minio:
+        condition: service_healthy
 
 volumes:
   app-storage:
   postgres-data:
   redis-data:
-  # minio-data:
+  minio-data:

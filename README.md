@@ -158,17 +158,17 @@ cd vibeup-api
    AWS_DEFAULT_REGION=us-east-1
    AWS_BUCKET=private-bucket
    AWS_PUBLIC_BUCKET=public-bucket
-   AWS_ENDPOINT=https://s3.example.com
-   AWS_URL=https://s3.example.com/private-bucket
-   AWS_PUBLIC_URL=https://s3.example.com/public-bucket
+   AWS_ENDPOINT=https://storage.example.com
+   AWS_URL=https://storage.example.com/private-bucket
+   AWS_PUBLIC_URL=https://storage.example.com/public-bucket
    AWS_USE_PATH_STYLE_ENDPOINT=true
    ```
 
-   `APP_KEY` должен быть корректным Laravel-ключом; его можно получить локально командой `./vendor/bin/sail artisan key:generate --show --no-interaction`. Сохраните его и не меняйте между развёртываниями. Подберите URLs и `AWS_USE_PATH_STYLE_ENDPOINT` согласно настройкам хранилища; endpoint должен быть доступен контейнерам. Проверяйте настройки почты и других интеграций отдельно.
+   `APP_KEY` должен быть корректным Laravel-ключом; его можно получить локально командой `./vendor/bin/sail artisan key:generate --show --no-interaction`. Сохраните его и не меняйте между развёртываниями. Для MinIO задайте уникальные, достаточно сложные `AWS_ACCESS_KEY_ID` и `AWS_SECRET_ACCESS_KEY`; эти же значения используются как учётные данные администратора MinIO. Имена `AWS_BUCKET` и `AWS_PUBLIC_BUCKET` должны быть разными. `AWS_ENDPOINT` должен указывать на публичный HTTPS-домен MinIO без имени бакета и быть доступен как контейнерам, так и клиентам: он используется для подписи временных ссылок на приватные файлы. Проверяйте настройки почты и других интеграций отдельно.
 
    Compose передаёт переменные из `.env` Dokploy в `app`, `queue` и `reverb`, а также принудительно задаёт для них PostgreSQL (`postgres:5432`), Redis (`redis:6379`) и очередь Redis. Встроенный Redis не настроен на пароль, поэтому для него нужен `REDIS_PASSWORD=null` без `REDIS_URL` с другими параметрами подключения.
 
-3. В разделе **Domains** назначьте домен API сервису `webserver` с внутренним портом `80`, а отдельный домен WebSocket — сервису `reverb` с внутренним портом `8080`. Настройте DNS и TLS; `REVERB_HOST` должен быть доступен приложению для отправки событий, а WebSocket-домен — клиентам. Подробнее: [домены Compose в Dokploy](https://docs.dokploy.com/docs/core/docker-compose/domains).
+3. В разделе **Domains** назначьте отдельные домены сервисам `webserver` (внутренний порт `80`), `reverb` (`8080`) и `minio` (`9000`, S3 API). Настройте DNS и TLS; `REVERB_HOST` должен быть доступен приложению для отправки событий, а WebSocket-домен — клиентам. Домен MinIO должен совпадать с `AWS_ENDPOINT`; консоль MinIO работает на внутреннем порту `9001` и при необходимости настраивается отдельно. Подробнее: [домены Compose в Dokploy](https://docs.dokploy.com/docs/core/docker-compose/domains).
 4. Запустите развёртывание. В терминале контейнера `app` выполните миграции:
 
    ```bash
@@ -177,8 +177,12 @@ cd vibeup-api
 
    Миграции не выполняются автоматически: применяйте их при первом запуске и после обновлений, которые их содержат. Проверьте логи `app`, `queue` и `reverb` в Dokploy.
 
-Compose запускает PostgreSQL 17, Redis, приложение, Nginx, Reverb и обработчик очереди. Horizon и MinIO в этом Compose отключены. Для медиа нужен отдельно настроенный S3-совместимый сервис; бакеты и права доступа следует подготовить у поставщика. Очередь обрабатывается автоматически контейнером `queue`.
+Compose запускает PostgreSQL 17, Redis, MinIO, приложение, Nginx, Reverb и обработчик очереди. Сервис `minio-init` дожидается готовности MinIO и запускает `minio:setup-buckets` перед стартом приложения: он создаёт отсутствующие бакеты и настраивает публичное чтение для `AWS_PUBLIC_BUCKET`. При одинаковых именах бакетов инициализация завершается ошибкой. Логи инициализации доступны в Dokploy. Horizon отключён; очередь обрабатывается контейнером `queue`.
 
-PostgreSQL, Redis и `storage` используют именованные тома. Настройте резервное копирование и сохраняйте учётные данные PostgreSQL при повторном развёртывании. Локальный Sail использует PostgreSQL 18 и собственный том: перенос данных между окружениями и версиями PostgreSQL требует отдельной миграции, простая подмена тома не подходит.
+PostgreSQL, Redis, MinIO и `storage` используют именованные тома. Настройте резервное копирование и сохраняйте учётные данные PostgreSQL при повторном развёртывании. Локальный Sail использует PostgreSQL 18 и собственный том: перенос данных между окружениями и версиями PostgreSQL требует отдельной миграции, простая подмена тома не подходит.
 
 При обновлении дождитесь завершения публикации в GitHub Actions, выберите нужный `IMAGE_TAG` и повторно разверните Compose в Dokploy. Настройка Compose загружает готовые образы; автоматический вызов развёртывания после публикации в этом репозитории не настроен. Существующий workflow `deploy.yml` отдельно развёртывает ветку `devstage` на прежний VPS.
+
+## Octane
+
+Настройки `OCTANE_SERVER` и `OCTANE_HTTPS` из старого `.env` в текущей конфигурации не используются: приложение работает через PHP-FPM и Nginx. Для перехода на FrankenPHP потребуется отдельное внедрение Laravel Octane.

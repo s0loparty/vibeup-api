@@ -4,3 +4,5 @@
 !.env.example
 vendor
 node_modules
+
+storage/framework/testing/*

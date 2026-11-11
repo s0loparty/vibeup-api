@@ -4,11 +4,15 @@ RUN apk add --no-cache \
         libpq-dev \
         oniguruma-dev \
         libzip-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
+        libwebp-dev \
         zip \
         unzip \
         git \
         curl \
-    && docker-php-ext-install pdo_pgsql mbstring zip exif pcntl \
+    && docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-install pdo_pgsql mbstring zip exif pcntl gd \
     && apk add --no-cache --virtual .build-deps autoconf build-base \
     && pecl install redis && docker-php-ext-enable redis \
     && apk del .build-deps

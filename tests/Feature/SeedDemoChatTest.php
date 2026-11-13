@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ChatType;
 use App\Models\Chat;
 use App\Models\Message;
 use App\Models\User;
@@ -23,12 +24,12 @@ class SeedDemoChatTest extends TestCase
 
         $this->artisan('demo:seed-chat', ['user' => $user->id])->assertSuccessful();
 
-        $this->assertSame(5, User::query()->count());
-        $this->assertSame(3, $user->chats()->count());
+        $this->assertSame(52, User::query()->count());
+        $this->assertSame(50, $user->chats()->count());
         $this->assertSame(0, $otherUser->chats()->count());
-        $this->assertSame(3, Chat::query()->count());
-        $this->assertSame(7, Message::query()->count());
-        $this->assertSame(0, Message::query()->where('sender_id', $user->id)->count());
+        $this->assertSame(50, Chat::query()->count());
+        $this->assertGreaterThanOrEqual(500, Message::query()->count());
+        $this->assertLessThanOrEqual(5000, Message::query()->count());
         $this->assertSame($originalPassword, $user->fresh()->password);
 
         foreach (User::query()->whereNotIn('id', [$user->id, $otherUser->id])->get() as $demoUser) {
@@ -36,15 +37,34 @@ class SeedDemoChatTest extends TestCase
             $this->assertFalse(Hash::check('password', $demoUser->password));
         }
 
+        $privatePairs = [];
+
         foreach ($user->chats as $chat) {
+            $members = $chat->members()->pluck('users.id')->all();
+            $senders = $chat->messages()->distinct()->pluck('sender_id')->all();
+            $this->assertContains($user->id, $members);
+            $this->assertEqualsCanonicalizing($members, $senders);
+            $this->assertCount(count(array_unique($members)), $members);
+            $this->assertGreaterThanOrEqual(10, $chat->messages()->count());
+            $this->assertLessThanOrEqual(100, $chat->messages()->count());
             $this->assertSame($chat->messages()->latest('id')->first()->id, $chat->last_message_id);
+
+            if ($chat->type === ChatType::PRIVATE) {
+                $this->assertCount(2, $members);
+                $other = array_values(array_diff($members, [$user->id]))[0];
+                $this->assertNotContains($other, $privatePairs);
+                $privatePairs[] = $other;
+            } else {
+                $this->assertGreaterThanOrEqual(3, count($members));
+                $this->assertLessThanOrEqual(8, count($members));
+            }
         }
 
         $messageCount = Message::query()->count();
-        $user->createdChats()->where('type', 'group')->firstOrFail()->update(['title' => 'Переименованный демо-чат']);
+        $user->createdChats()->firstOrFail()->update(['title' => 'Переименованный демо-чат']);
         $this->artisan('demo:seed-chat', ['user' => $user->id])->assertSuccessful();
-        $this->assertSame(5, User::query()->count());
-        $this->assertSame(3, Chat::query()->count());
+        $this->assertSame(52, User::query()->count());
+        $this->assertSame(50, Chat::query()->count());
         $this->assertSame($messageCount, Message::query()->count());
     }
 
@@ -75,7 +95,7 @@ class SeedDemoChatTest extends TestCase
     public function test_it_does_not_modify_an_existing_user_with_a_reserved_demo_email(): void
     {
         $user = User::factory()->create();
-        $existing = User::factory()->create(['email' => 'demo-vibe-'.$user->id.'-1@example.invalid']);
+        $existing = User::factory()->create(['email' => 'demo-vibe-'.$user->id.'-bulk-1@example.invalid']);
         $originalPassword = $existing->password;
 
         $this->artisan('demo:seed-chat', ['user' => $user->id])->assertSuccessful();
@@ -105,6 +125,6 @@ class SeedDemoChatTest extends TestCase
         $this->assertSame(1, User::query()->count());
 
         $this->artisan('demo:seed-chat', ['user' => $user->id, '--force' => true])->assertSuccessful();
-        $this->assertSame(3, Chat::query()->count());
+        $this->assertSame(50, Chat::query()->count());
     }
 }
